@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  antigravity-proxy:
+    build: .
+    container_name: antigravity-proxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/root/.config/antigravity-proxy
+    environment:
+      - PORT=8080
+      - DEBUG=false
+      - FALLBACK=true
+    restart: unless-stopped

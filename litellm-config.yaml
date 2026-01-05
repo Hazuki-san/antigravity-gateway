@@ -1,0 +1,11 @@
+model_list:
+  - model_name: claude-sonnet-4-5-thinking
+    litellm_params:
+      model: openai/claude-sonnet-4-5-thinking
+      api_base: http://antigravity-proxy:8080/v1
+      api_key: "not-needed"
+  - model_name: gemini-3-pro-high
+    litellm_params:
+      model: openai/gemini-3-pro-high
+      api_base: http://antigravity-proxy:8080/v1
+      api_key: "not-needed"
