@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   antigravity-proxy:
-    build: .
+    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
+    # Or build locally:
+    # build: .
     container_name: antigravity-proxy
     ports:
       - "8080:8080"

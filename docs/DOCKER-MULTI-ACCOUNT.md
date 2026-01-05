@@ -8,13 +8,13 @@ Pre-built Docker images are automatically published to GitHub Container Registry
 
 ```bash
 # Latest from main branch
-docker pull ghcr.io/badri-s2001/antigravity-claude-proxy:latest
+docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:latest
 
 # Specific version
-docker pull ghcr.io/badri-s2001/antigravity-claude-proxy:1.0.2
+docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:1.0.2
 
 # Specific commit
-docker pull ghcr.io/badri-s2001/antigravity-claude-proxy:abc1234
+docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:abc1234
 ```
 
 Images are built for both `linux/amd64` and `linux/arm64` architectures.
@@ -54,7 +54,7 @@ version: '3.8'
 
 services:
   antigravity-proxy:
-    image: ghcr.io/badri-s2001/antigravity-claude-proxy:latest
+    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
     # Or build locally:
     # build: .
     container_name: antigravity-proxy
@@ -111,7 +111,7 @@ If you can't use a local machine, run the OAuth flow in headless mode:
 # Start a temporary container for account setup
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts add --no-browser
 
 # The container will display a URL like:
@@ -128,7 +128,7 @@ docker run -it --rm \
 # Repeat for each account:
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts add --no-browser
 ```
 
@@ -138,13 +138,13 @@ docker run -it --rm \
 # List configured accounts
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts list
 
 # Verify all accounts can authenticate
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts verify
 ```
 
@@ -175,7 +175,7 @@ version: '3.8'
 
 services:
   antigravity-proxy:
-    image: ghcr.io/badri-s2001/antigravity-claude-proxy:latest
+    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
     container_name: antigravity-proxy
     ports:
       - "127.0.0.1:8080:8080"  # Only expose to localhost
@@ -236,7 +236,7 @@ version: '3.8'
 
 services:
   antigravity-proxy:
-    image: ghcr.io/badri-s2001/antigravity-claude-proxy:latest
+    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
     container_name: antigravity-proxy
     volumes:
       - ./data:/root/.config/antigravity-proxy
@@ -268,7 +268,7 @@ version: '3.8'
 
 services:
   antigravity-proxy:
-    image: ghcr.io/badri-s2001/antigravity-claude-proxy:latest
+    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
     container_name: antigravity-proxy
     volumes:
       - ./data:/root/.config/antigravity-proxy
@@ -343,7 +343,7 @@ docker-compose down
 # Add new account
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts add --no-browser
 
 # Restart
@@ -364,7 +364,7 @@ docker-compose down
 # Interactive account management
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts
 
 # Choose "Re-authenticate" for the invalid account
@@ -477,7 +477,7 @@ docker-compose down
 
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts
 
 # Select the invalid account and re-authenticate
@@ -570,12 +570,12 @@ curl "http://localhost:8080/account-limits?format=table"
 # Add account (interactive)
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts add --no-browser
 
 # List accounts
 docker run -it --rm \
   -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/badri-s2001/antigravity-claude-proxy:latest \
+  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
   node bin/cli.js accounts list
 ```
