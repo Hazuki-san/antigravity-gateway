@@ -6,7 +6,7 @@
  * - Thinking blocks between tool calls
  * - Thinking after tool results
  *
- * This simulates complex Claude Code scenarios where the model
+ * This simulates complex AI client scenarios where the model
  * thinks multiple times during a single turn.
  *
  * NOTE: This test is Claude-only. Interleaved thinking requires

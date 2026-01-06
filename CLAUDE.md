@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI assistants when working with code in this repository.
 
 ## Project Overview
 
-Antigravity Claude Proxy is a Node.js proxy server that exposes an Anthropic-compatible API backed by Antigravity's Cloud Code service. It enables using Claude models (`claude-sonnet-4-5-thinking`, `claude-opus-4-5-thinking`) and Gemini models (`gemini-3-flash`, `gemini-3-pro-low`, `gemini-3-pro-high`) with Claude Code CLI.
+Antigravity Gateway is a Node.js server that provides a universal AI gateway, exposing both OpenAI-compatible (`/v1/chat/completions`) and Anthropic-compatible (`/v1/messages`) APIs backed by Antigravity's Cloud Code service. It enables using Claude models (`claude-sonnet-4-5-thinking`, `claude-opus-4-5-thinking`) and Gemini models (`gemini-3-flash`, `gemini-3-pro-low`, `gemini-3-pro-high`) with any AI coding tool that supports OpenAI or Anthropic APIs.
 
-The proxy translates requests from Anthropic Messages API format → Google Generative AI format → Antigravity Cloud Code API, then converts responses back to Anthropic format with full thinking/streaming support.
+The gateway translates requests from both API formats → Google Generative AI format → Antigravity Cloud Code API, then converts responses back with full thinking/streaming support.
 
 ## Commands
 
@@ -51,7 +51,7 @@ npm run test:oauth         # OAuth no-browser mode
 
 **Request Flow:**
 ```
-Claude Code CLI → Express Server (server.js) → CloudCode Client → Antigravity Cloud Code API
+Any AI Client → Express Server (server.js) → CloudCode Client → Antigravity Cloud Code API
 ```
 
 **Directory Structure:**
@@ -59,7 +59,7 @@ Claude Code CLI → Express Server (server.js) → CloudCode Client → Antigrav
 ```
 src/
 ├── index.js                    # Entry point
-├── server.js                   # Express server
+├── server.js                   # Express server with OpenAI + Anthropic endpoints
 ├── constants.js                # Configuration values
 ├── errors.js                   # Custom error classes
 ├── fallback-config.js          # Model fallback mappings and helpers
@@ -90,14 +90,15 @@ src/
 ├── cli/                        # CLI tools
 │   └── accounts.js             # Account management CLI
 │
-├── format/                     # Format conversion (Anthropic ↔ Google)
+├── format/                     # Format conversion (Anthropic ↔ Google ↔ OpenAI)
 │   ├── index.js                # Re-exports all converters
 │   ├── request-converter.js    # Anthropic → Google conversion
 │   ├── response-converter.js   # Google → Anthropic conversion
 │   ├── content-converter.js    # Message content conversion
 │   ├── schema-sanitizer.js     # JSON Schema cleaning for Gemini
 │   ├── thinking-utils.js       # Thinking block validation/recovery
-│   └── signature-cache.js      # Signature cache (tool_use + thinking signatures)
+│   ├── signature-cache.js      # Signature cache (tool_use + thinking signatures)
+│   └── openai-compat.js        # OpenAI ↔ Anthropic conversion
 │
 └── utils/                      # Utilities
     ├── helpers.js              # formatDuration, sleep
@@ -106,21 +107,20 @@ src/
 
 **Key Modules:**
 
-- **src/server.js**: Express server exposing Anthropic-compatible endpoints (`/v1/messages`, `/v1/models`, `/health`, `/account-limits`)
+- **src/server.js**: Express server exposing both OpenAI (`/v1/chat/completions`) and Anthropic (`/v1/messages`) endpoints
+- **src/format/openai-compat.js**: Converts between OpenAI Chat Completions and Anthropic Messages formats
 - **src/cloudcode/**: Cloud Code API client with retry/failover logic, streaming and non-streaming support
 - **src/account-manager/**: Multi-account pool with sticky selection, rate limit handling, and automatic cooldown
 - **src/auth/**: Authentication including Google OAuth, token extraction, and database access
-- **src/format/**: Format conversion between Anthropic and Google Generative AI formats
+- **src/format/**: Format conversion between OpenAI, Anthropic, and Google Generative AI formats
 - **src/constants.js**: API endpoints, model mappings, fallback config, OAuth config, and all configuration values
-- **src/fallback-config.js**: Model fallback mappings (`getFallbackModel()`, `hasFallback()`)
-- **src/errors.js**: Custom error classes (`RateLimitError`, `AuthError`, `ApiError`, etc.)
 
 **Multi-Account Load Balancing:**
 - Sticky account selection for prompt caching (stays on same account across turns)
 - Model-specific rate limiting via `account.modelRateLimits[modelId]`
 - Automatic switch only when rate-limited for > 2 minutes on the current model
 - Session ID derived from first user message hash for cache continuity
-- Account state persisted to `~/.config/antigravity-proxy/accounts.json`
+- Account state persisted to `~/.config/antigravity-gateway/accounts.json`
 
 **Prompt Caching:**
 - Cache is organization-scoped (requires same account + session ID)
@@ -165,7 +165,7 @@ src/
 - `getModelFamily(model)` returns `'claude'` or `'gemini'` based on model name
 - Claude models use `signature` field on thinking blocks
 - Gemini models use `thoughtSignature` field on functionCall parts (cached or sentinel value)
-- When Claude Code strips `thoughtSignature`, the proxy tries to restore from cache, then falls back to `skip_thought_signature_validator`
+- When AI clients strip `thoughtSignature`, the proxy tries to restore from cache, then falls back to `skip_thought_signature_validator`
 
 **Error Handling:** Use custom error classes from `src/errors.js`:
 - `RateLimitError` - 429/RESOURCE_EXHAUSTED errors

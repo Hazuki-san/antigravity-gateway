@@ -1,7 +1,7 @@
 /**
  * Multi-Turn Tool Call Test (Streaming)
  *
- * Simulates Claude Code's streaming multi-turn conversation pattern.
+ * Simulates AI client's streaming multi-turn conversation pattern.
  * Same flow as non-streaming but verifies:
  * - SSE events are properly formatted
  * - signature_delta events are present
@@ -18,7 +18,7 @@ async function runTestsForModel(family, model) {
     console.log('='.repeat(60));
     console.log(`MULTI-TURN TOOL CALL TEST [${family.toUpperCase()}]`);
     console.log(`Model: ${model}`);
-    console.log('Simulates Claude Code streaming conversation');
+    console.log('Simulates AI client streaming conversation');
     console.log('='.repeat(60));
     console.log('');
 

@@ -2,9 +2,9 @@
  * Thinking Signature Test
  *
  * Tests that thinking blocks with signatures are properly handled in multi-turn
- * conversations, simulating how Claude Code sends requests.
+ * conversations, simulating how AI client sends requests.
  *
- * Claude Code sends assistant messages with thinking blocks that include signatures.
+ * AI client sends assistant messages with thinking blocks that include signatures.
  * These signatures must be preserved and sent back to the API.
  *
  * Note: Claude puts signatures on thinking blocks, Gemini 3+ puts them on tool_use blocks.
@@ -20,7 +20,7 @@ async function runTestsForModel(family, model) {
     console.log('='.repeat(60));
     console.log(`THINKING SIGNATURE TEST [${family.toUpperCase()}]`);
     console.log(`Model: ${model}`);
-    console.log('Simulates Claude Code multi-turn with thinking blocks');
+    console.log('Simulates AI client multi-turn with thinking blocks');
     console.log('='.repeat(60));
     console.log('');
 
@@ -78,7 +78,7 @@ async function runTestsForModel(family, model) {
         console.log('  SKIPPED - No tool use in turn 1');
         results.push({ name: 'Turn 2: Multi-turn with signature', passed: false, skipped: true });
     } else {
-        // Build assistant message with thinking (including signature) - this is how Claude Code sends it
+        // Build assistant message with thinking (including signature) - this is how AI client sends it
         const assistantContent = turn1Result.content;
 
         // Log what we're sending back

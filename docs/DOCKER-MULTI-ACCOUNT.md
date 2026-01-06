@@ -8,13 +8,13 @@ Pre-built Docker images are automatically published to GitHub Container Registry
 
 ```bash
 # Latest from main branch
-docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:latest
+docker pull ghcr.io/johnneerdael/antigravity-gateway:latest
 
 # Specific version
-docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:1.0.2
+docker pull ghcr.io/johnneerdael/antigravity-gateway:1.0.2
 
 # Specific commit
-docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:abc1234
+docker pull ghcr.io/johnneerdael/antigravity-gateway:abc1234
 ```
 
 Images are built for both `linux/amd64` and `linux/arm64` architectures.
@@ -36,7 +36,7 @@ Running multiple Google accounts provides:
 ## Directory Structure
 
 ```
-antigravity-proxy/
+antigravity-gateway/
 ├── docker-compose.yml
 ├── data/
 │   └── accounts.json      # Created after adding accounts
@@ -53,15 +53,15 @@ Create a `docker-compose.yml`:
 version: '3.8'
 
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
     # Or build locally:
     # build: .
-    container_name: antigravity-proxy
+    container_name: antigravity-gateway
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/root/.config/antigravity-proxy
+      - ./data:/root/.config/antigravity-gateway
     environment:
       - PORT=8080
       - DEBUG=false
@@ -85,22 +85,22 @@ The easiest approach for headless servers.
 
 ```bash
 # On your local machine (with browser)
-npm install -g antigravity-claude-proxy
+npm install -g antigravity-gateway
 
 # Add first account
-antigravity-claude-proxy accounts add
+antigravity-gateway accounts add
 # Browser opens → sign in → authorize
 
 # Add more accounts
-antigravity-claude-proxy accounts add
-antigravity-claude-proxy accounts add
+antigravity-gateway accounts add
+antigravity-gateway accounts add
 # Repeat for each Google account
 
 # Verify all accounts work
-antigravity-claude-proxy accounts verify
+antigravity-gateway accounts verify
 
 # Copy accounts file to your server
-scp ~/.config/antigravity-proxy/accounts.json user@server:~/antigravity-proxy/data/
+scp ~/.config/antigravity-gateway/accounts.json user@server:~/antigravity-gateway/data/
 ```
 
 #### Option B: Add Accounts via Headless OAuth
@@ -110,8 +110,8 @@ If you can't use a local machine, run the OAuth flow in headless mode:
 ```bash
 # Start a temporary container for account setup
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts add --no-browser
 
 # The container will display a URL like:
@@ -127,8 +127,8 @@ docker run -it --rm \
 
 # Repeat for each account:
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts add --no-browser
 ```
 
@@ -137,14 +137,14 @@ docker run -it --rm \
 ```bash
 # List configured accounts
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts list
 
 # Verify all accounts can authenticate
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts verify
 ```
 
@@ -174,13 +174,13 @@ For production deployments, use this enhanced configuration:
 version: '3.8'
 
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
+    container_name: antigravity-gateway
     ports:
       - "127.0.0.1:8080:8080"  # Only expose to localhost
     volumes:
-      - ./data:/root/.config/antigravity-proxy:rw
+      - ./data:/root/.config/antigravity-gateway:rw
     environment:
       - PORT=8080
       - DEBUG=false
@@ -221,7 +221,7 @@ Update `docker-compose.yml` to use it:
 
 ```yaml
 services:
-  antigravity-proxy:
+  antigravity-gateway:
     # ...
     env_file:
       - .env
@@ -235,11 +235,11 @@ If using Traefik for SSL termination:
 version: '3.8'
 
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
+    container_name: antigravity-gateway
     volumes:
-      - ./data:/root/.config/antigravity-proxy
+      - ./data:/root/.config/antigravity-gateway
     environment:
       - PORT=8080
       - DEBUG=false
@@ -267,11 +267,11 @@ If using nginx:
 version: '3.8'
 
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
+    container_name: antigravity-gateway
     volumes:
-      - ./data:/root/.config/antigravity-proxy
+      - ./data:/root/.config/antigravity-gateway
     environment:
       - PORT=8080
     restart: unless-stopped
@@ -286,7 +286,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
     depends_on:
-      - antigravity-proxy
+      - antigravity-gateway
     networks:
       - proxy-network
 
@@ -304,7 +304,7 @@ events {
 
 http {
     upstream antigravity {
-        server antigravity-proxy:8080;
+        server antigravity-gateway:8080;
     }
 
     server {
@@ -342,8 +342,8 @@ docker-compose down
 
 # Add new account
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts add --no-browser
 
 # Restart
@@ -363,8 +363,8 @@ docker-compose down
 
 # Interactive account management
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts
 
 # Choose "Re-authenticate" for the invalid account
@@ -434,7 +434,7 @@ If you want to add Prometheus monitoring, you can add a metrics endpoint via a s
 version: '3.8'
 
 services:
-  antigravity-proxy:
+  antigravity-gateway:
     # ... your config
     
   prometheus:
@@ -451,7 +451,7 @@ services:
 
 ```bash
 # Check logs
-docker-compose logs antigravity-proxy
+docker-compose logs antigravity-gateway
 
 # Common issues:
 # - Missing accounts.json: Add accounts first
@@ -476,8 +476,8 @@ curl "http://localhost:8080/account-limits?format=table"
 docker-compose down
 
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts
 
 # Select the invalid account and re-authenticate
@@ -493,7 +493,7 @@ curl -X POST http://localhost:8080/refresh-token
 # If still failing, re-authenticate the account
 ```
 
-### Connection Issues from Claude Code
+### Connection Issues from AI client
 
 Verify the proxy is accessible:
 
@@ -505,7 +505,7 @@ curl http://localhost:8080/health
 curl http://your-server:8080/health
 ```
 
-Ensure Claude Code is configured correctly:
+Ensure AI client is configured correctly:
 
 ```json
 {
@@ -569,13 +569,13 @@ curl "http://localhost:8080/account-limits?format=table"
 
 # Add account (interactive)
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts add --no-browser
 
 # List accounts
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts list
 ```

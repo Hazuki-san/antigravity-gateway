@@ -1,7 +1,7 @@
 /**
  * Multi-Turn Tool Call Test (Non-Streaming)
  *
- * Simulates Claude Code's actual multi-turn conversation pattern:
+ * Simulates AI client's actual multi-turn conversation pattern:
  * 1. User asks question requiring tool
  * 2. Assistant responds with thinking + tool_use
  * 3. User provides tool_result
@@ -23,7 +23,7 @@ async function runTestsForModel(family, model) {
     console.log('='.repeat(60));
     console.log(`MULTI-TURN TOOL CALL TEST [${family.toUpperCase()}]`);
     console.log(`Model: ${model}`);
-    console.log('Simulates Claude Code conversation pattern');
+    console.log('Simulates AI client conversation pattern');
     console.log('='.repeat(60));
     console.log('');
 

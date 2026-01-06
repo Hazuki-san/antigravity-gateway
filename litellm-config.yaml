@@ -1,9 +1,4 @@
-# LiteLLM configuration for Antigravity Claude Proxy
-# For Docker: use http://antigravity-proxy:8080/v1
-# For local: use http://localhost:8080/v1
-
 model_list:
-  # Claude models via Antigravity
   - model_name: claude-sonnet-4-5-thinking
     model_info:
       mode: chat
@@ -14,7 +9,7 @@ model_list:
       max_output_tokens: 16000
     litellm_params:
       model: openai/claude-sonnet-4-5-thinking
-      api_base: http://antigravity-proxy:8080/v1
+      api_base: http://antigravity-gateway:8080/v1
       api_key: "not-needed"
       stream: true
 
@@ -28,7 +23,7 @@ model_list:
       max_output_tokens: 16000
     litellm_params:
       model: openai/claude-opus-4-5-thinking
-      api_base: http://antigravity-proxy:8080/v1
+      api_base: http://antigravity-gateway:8080/v1
       api_key: "not-needed"
       stream: true
 
@@ -42,11 +37,10 @@ model_list:
       max_output_tokens: 8192
     litellm_params:
       model: openai/claude-sonnet-4-5
-      api_base: http://antigravity-proxy:8080/v1
+      api_base: http://antigravity-gateway:8080/v1
       api_key: "not-needed"
       stream: true
 
-  # Gemini models via Antigravity
   - model_name: gemini-3-flash
     model_info:
       mode: chat
@@ -57,7 +51,7 @@ model_list:
       max_output_tokens: 16384
     litellm_params:
       model: openai/gemini-3-flash
-      api_base: http://antigravity-proxy:8080/v1
+      api_base: http://antigravity-gateway:8080/v1
       api_key: "not-needed"
       stream: true
 
@@ -71,7 +65,7 @@ model_list:
       max_output_tokens: 16384
     litellm_params:
       model: openai/gemini-3-pro-high
-      api_base: http://antigravity-proxy:8080/v1
+      api_base: http://antigravity-gateway:8080/v1
       api_key: "not-needed"
       stream: true
 
@@ -85,6 +79,6 @@ model_list:
       max_output_tokens: 16384
     litellm_params:
       model: openai/gemini-3-pro-low
-      api_base: http://antigravity-proxy:8080/v1
+      api_base: http://antigravity-gateway:8080/v1
       api_key: "not-needed"
       stream: true

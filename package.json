@@ -1,11 +1,12 @@
 {
-  "name": "antigravity-claude-proxy",
-  "version": "1.0.2",
-  "description": "Proxy server to use Antigravity's Claude models with Claude Code CLI",
+  "name": "antigravity-gateway",
+  "version": "2.0.0",
+  "description": "Universal AI gateway - access Claude & Gemini models via OpenAI or Anthropic-compatible API through Antigravity Cloud Code",
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "antigravity-claude-proxy": "bin/cli.js"
+    "antigravity-gateway": "bin/cli.js",
+    "agw": "bin/cli.js"
   },
   "files": [
     "src",
@@ -31,20 +32,32 @@
   },
   "keywords": [
     "claude",
+    "gemini",
     "anthropic",
+    "openai",
     "antigravity",
     "proxy",
-    "vertex-ai"
+    "gateway",
+    "ai",
+    "llm",
+    "cursor",
+    "continue",
+    "aider",
+    "cline",
+    "litellm"
   ],
   "author": "Badri Narayanan",
+  "contributors": [
+    "John Neerdael"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/badri-s2001/antigravity-claude-proxy.git"
+    "url": "git+https://github.com/johnneerdael/antigravity-gateway.git"
   },
-  "homepage": "https://github.com/badri-s2001/antigravity-claude-proxy#readme",
+  "homepage": "https://github.com/johnneerdael/antigravity-gateway#readme",
   "bugs": {
-    "url": "https://github.com/badri-s2001/antigravity-claude-proxy/issues"
+    "url": "https://github.com/johnneerdael/antigravity-gateway/issues"
   },
   "engines": {
     "node": ">=18.0.0"

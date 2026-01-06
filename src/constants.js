@@ -67,7 +67,7 @@ export const DEFAULT_PORT = 8080;
 // Multi-account configuration
 export const ACCOUNT_CONFIG_PATH = join(
     homedir(),
-    '.config/antigravity-proxy/accounts.json'
+    '.config/antigravity-gateway/accounts.json'
 );
 
 // Antigravity app database path (for legacy single-account token extraction)
@@ -88,7 +88,7 @@ export const MIN_SIGNATURE_LENGTH = 50; // Minimum valid thinking signature leng
 export const GEMINI_MAX_OUTPUT_TOKENS = 16384;
 
 // Gemini signature handling
-// Sentinel value to skip thought signature validation when Claude Code strips the field
+// Sentinel value to skip thought signature validation when AI clients strip the field
 // See: https://ai.google.dev/gemini-api/docs/thought-signatures
 export const GEMINI_SKIP_SIGNATURE = 'skip_thought_signature_validator';
 

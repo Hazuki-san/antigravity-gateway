@@ -1,497 +1,385 @@
-# Antigravity Claude Proxy
+# Antigravity Gateway
 
-[![npm version](https://img.shields.io/npm/v/antigravity-claude-proxy.svg)](https://www.npmjs.com/package/antigravity-claude-proxy)
-[![npm downloads](https://img.shields.io/npm/dm/antigravity-claude-proxy.svg)](https://www.npmjs.com/package/antigravity-claude-proxy)
+[![npm version](https://img.shields.io/npm/v/antigravity-gateway.svg)](https://www.npmjs.com/package/antigravity-gateway)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://github.com/johnneerdael/antigravity-gateway/pkgs/container/antigravity-gateway)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<a href="https://buymeacoffee.com/badrinarayanans" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50"></a>
-
-A proxy server that exposes an **Anthropic-compatible API** backed by **Antigravity's Cloud Code**, letting you use Claude and Gemini models with **Claude Code CLI**, **LiteLLM**, or any Anthropic-compatible client.
-
-![Antigravity Claude Proxy Banner](images/banner.png)
-
-## How It Works
+**Universal AI Gateway** - Access Claude and Gemini models through any OpenAI or Anthropic-compatible client, powered by Antigravity's Cloud Code.
 
 ```
-┌──────────────────┐     ┌─────────────────────┐     ┌────────────────────────────┐
-│   Claude Code    │────▶│  This Proxy Server  │────▶│  Antigravity Cloud Code    │
-│   (Anthropic     │     │  (Anthropic → Google│     │  (daily-cloudcode-pa.      │
-│    API format)   │     │   Generative AI)    │     │   sandbox.googleapis.com)  │
-└──────────────────┘     └─────────────────────┘     └────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         YOUR AI TOOLS                                   │
+│  Cursor • Cline • Continue • Aider • Claude Code • Gemini CLI • etc.   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │     Antigravity Gateway       │
+                    │  OpenAI + Anthropic API       │
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │   Antigravity Cloud Code      │
+                    │   Claude • Gemini models      │
+                    └───────────────────────────────┘
 ```
 
-1. Receives requests in **Anthropic Messages API format**
-2. Uses OAuth tokens from added Google accounts (or Antigravity's local database)
-3. Transforms to **Google Generative AI format** with Cloud Code wrapping
-4. Sends to Antigravity's Cloud Code API
-5. Converts responses back to **Anthropic format** with full thinking/streaming support
+## Features
 
-## Prerequisites
+- **Dual API Support**: Both OpenAI (`/v1/chat/completions`) and Anthropic (`/v1/messages`) endpoints
+- **Multiple Models**: Access Claude Sonnet 4.5, Opus 4.5, and Gemini 3 Flash/Pro models
+- **Extended Thinking**: Full support for reasoning/thinking models
+- **Multi-Account Load Balancing**: Add multiple Google accounts for higher throughput
+- **Universal Compatibility**: Works with any OpenAI or Anthropic-compatible client
 
-- **Node.js** 18 or later (for npm installation)
-- **Docker** (for containerized deployment)
-- **Antigravity** installed (for single-account mode) OR Google account(s) for multi-account mode
+## Quick Start
 
----
-
-## Installation
-
-### Option 1: Docker (Recommended for Servers)
-
-Pre-built images are available for `linux/amd64` and `linux/arm64`:
+### Docker (Recommended)
 
 ```bash
-docker pull ghcr.io/johnneerdael/antigravity-claude-proxy:latest
+docker pull ghcr.io/johnneerdael/antigravity-gateway:latest
+
+docker run -it -p 8080:8080 \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest
 ```
 
-Create a `docker-compose.yml`:
+### Docker Compose
 
 ```yaml
-version: '3.8'
-
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
+    container_name: antigravity-gateway
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/root/.config/antigravity-proxy
+      - ./data:/root/.config/antigravity-gateway
     environment:
-      - PORT=8080
-      - DEBUG=false
       - FALLBACK=true
     restart: unless-stopped
 ```
 
-Add accounts and start:
+### NPM
 
 ```bash
-# Add Google account (headless mode for servers)
-docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
-  node bin/cli.js accounts add --no-browser
-
-# Start the proxy
-docker-compose up -d
-
-# Verify
-curl http://localhost:8080/health
-```
-
-> **Multi-account setup?** See [docs/DOCKER-MULTI-ACCOUNT.md](docs/DOCKER-MULTI-ACCOUNT.md) for production deployment with load balancing, reverse proxy examples, and monitoring.
-
-### Option 2: npm
-
-```bash
-# Run directly with npx (no install needed)
-npx antigravity-claude-proxy start
+npx antigravity-gateway start
 
 # Or install globally
-npm install -g antigravity-claude-proxy
-antigravity-claude-proxy start
+npm install -g antigravity-gateway
+agw start
 ```
 
-### Option 3: Clone Repository
+## Adding Google Accounts
+
+The gateway requires Google accounts with Antigravity access. Add accounts via OAuth:
 
 ```bash
-git clone https://github.com/johnneerdael/antigravity-claude-proxy.git
-cd antigravity-claude-proxy
-npm install
-npm start
+# Interactive (opens browser)
+agw accounts add
+
+# Headless servers (manual code entry)
+agw accounts add --no-browser
+
+# List configured accounts
+agw accounts list
 ```
 
 ---
 
-## Quick Start
+## Client Configuration
 
-### 1. Add Account(s)
+The gateway exposes two API endpoints:
+- **OpenAI-compatible**: `http://localhost:8080/v1/chat/completions`
+- **Anthropic-compatible**: `http://localhost:8080/v1/messages`
 
-You have two options:
+### Available Models
 
-**Option A: Use Antigravity (Single Account)**
-
-If you have Antigravity installed and logged in, the proxy will automatically extract your token. No additional setup needed.
-
-**Option B: Add Google Accounts via OAuth (Recommended for Multi-Account)**
-
-Add one or more Google accounts for load balancing.
-
-#### Desktop/Laptop (with browser)
-
-```bash
-# If installed via npm
-antigravity-claude-proxy accounts add
-
-# If using npx
-npx antigravity-claude-proxy accounts add
-
-# If cloned locally
-npm run accounts:add
-```
-
-This opens your browser for Google OAuth. Sign in and authorize access. Repeat for multiple accounts.
-
-#### Headless Server (Docker, SSH, no desktop)
-
-```bash
-# If installed via npm
-antigravity-claude-proxy accounts add --no-browser
-
-# If using npx
-npx antigravity-claude-proxy accounts add -- --no-browser
-
-# If cloned locally
-npm run accounts:add -- --no-browser
-```
-
-This displays an OAuth URL you can open on another device (phone/laptop). After signing in, copy the redirect URL or authorization code and paste it back into the terminal.
-
-#### Manage accounts
-
-```bash
-# List all accounts
-antigravity-claude-proxy accounts list
-
-# Verify accounts are working
-antigravity-claude-proxy accounts verify
-
-# Interactive account management
-antigravity-claude-proxy accounts
-```
-
-### 2. Start the Proxy Server
-
-```bash
-# If installed via npm
-antigravity-claude-proxy start
-
-# If using npx
-npx antigravity-claude-proxy start
-
-# If cloned locally
-npm start
-
-# If using Docker
-docker-compose up -d
-```
-
-The server runs on `http://localhost:8080` by default.
-
-### 3. Verify It's Working
-
-```bash
-# Health check
-curl http://localhost:8080/health
-
-# Check account status and quota limits
-curl "http://localhost:8080/account-limits?format=table"
-```
+| Model ID | Type | Context | Output | Thinking |
+|----------|------|---------|--------|----------|
+| `claude-sonnet-4-5-thinking` | Claude | 200K | 16K | ✓ |
+| `claude-opus-4-5-thinking` | Claude | 200K | 16K | ✓ |
+| `claude-sonnet-4-5` | Claude | 200K | 8K | ✗ |
+| `gemini-3-flash` | Gemini | 1M | 16K | ✓ |
+| `gemini-3-pro-high` | Gemini | 1M | 16K | ✓ |
+| `gemini-3-pro-low` | Gemini | 1M | 16K | ✓ |
 
 ---
 
-## Using with Claude Code CLI
+## AI Coding Tools Configuration
 
-### Configure Claude Code
+### Cursor
 
-Create or edit the Claude Code settings file:
+Settings → Models → Add Model:
+```
+Provider: OpenAI Compatible
+Base URL: http://localhost:8080/v1
+API Key: any-value
+Model: gemini-3-flash
+```
 
-**macOS:** `~/.claude/settings.json`
-**Linux:** `~/.claude/settings.json`
-**Windows:** `%USERPROFILE%\.claude\settings.json`
+### Continue.dev
 
-Add this configuration:
-
+Edit `~/.continue/config.json`:
 ```json
 {
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "test",
-    "ANTHROPIC_BASE_URL": "http://localhost:8080",
-    "ANTHROPIC_MODEL": "claude-opus-4-5-thinking",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-5-thinking",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-thinking",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-sonnet-4-5",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-4-5-thinking"
+  "models": [{
+    "title": "Antigravity Gateway",
+    "provider": "openai",
+    "model": "gemini-3-flash",
+    "apiBase": "http://localhost:8080/v1",
+    "apiKey": "any-value"
+  }]
+}
+```
+
+### Cline (VS Code)
+
+Settings → Cline → API Provider:
+```
+Provider: OpenAI Compatible
+Base URL: http://localhost:8080/v1
+API Key: any-value
+Model ID: claude-sonnet-4-5-thinking
+```
+
+### Roo Code
+
+Settings → Custom API:
+```
+API Endpoint: http://localhost:8080/v1/chat/completions
+API Key: any-value
+Model: gemini-3-flash
+```
+
+### Kilo Code
+
+Settings → Provider → OpenAI Compatible:
+```
+Base URL: http://localhost:8080/v1
+API Key: any-value
+Model: claude-sonnet-4-5-thinking
+```
+
+### TRAE
+
+Configure in settings:
+```
+Provider: OpenAI
+Base URL: http://localhost:8080/v1
+API Key: any-value
+```
+
+### OpenCode
+
+Edit `~/.opencode/config.json`:
+```json
+{
+  "provider": {
+    "type": "openai",
+    "baseUrl": "http://localhost:8080/v1",
+    "apiKey": "any-value",
+    "model": "gemini-3-flash"
   }
 }
 ```
 
-Or to use Gemini models:
+### Goose
 
+Edit `~/.config/goose/config.yaml`:
+```yaml
+provider: openai
+model: gemini-3-flash
+api_base: http://localhost:8080/v1
+api_key: any-value
+```
+
+### Aider
+
+```bash
+aider --openai-api-base http://localhost:8080/v1 \
+      --openai-api-key any-value \
+      --model openai/gemini-3-flash
+```
+
+Or set environment variables:
+```bash
+export OPENAI_API_BASE=http://localhost:8080/v1
+export OPENAI_API_KEY=any-value
+aider --model openai/gemini-3-flash
+```
+
+### Cody (Sourcegraph)
+
+Settings → Cody → Enterprise:
+```
+Server Endpoint: http://localhost:8080
+Access Token: any-value
+```
+
+### Claude Code CLI
+
+Create `~/.claude/settings.json`:
 ```json
 {
   "env": {
-    "ANTHROPIC_AUTH_TOKEN": "test",
     "ANTHROPIC_BASE_URL": "http://localhost:8080",
-    "ANTHROPIC_MODEL": "gemini-3-pro-high",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "gemini-3-pro-high",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gemini-3-flash",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gemini-2.5-flash-lite",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "gemini-3-flash"
+    "ANTHROPIC_API_KEY": "any-value"
   }
 }
 ```
 
-### Load Environment Variables
+Then run: `claude`
 
-Add the proxy settings to your shell profile:
-
-**macOS / Linux:**
+### Gemini CLI
 
 ```bash
-echo 'export ANTHROPIC_BASE_URL="http://localhost:8080"' >> ~/.zshrc
-echo 'export ANTHROPIC_API_KEY="test"' >> ~/.zshrc
-source ~/.zshrc
+export GEMINI_API_BASE=http://localhost:8080/v1
+export GEMINI_API_KEY=any-value
+gemini chat
 ```
 
-> For Bash users, replace `~/.zshrc` with `~/.bashrc`
+### Cherry Studio
 
-**Windows (PowerShell):**
-
-```powershell
-Add-Content $PROFILE "`n`$env:ANTHROPIC_BASE_URL = 'http://localhost:8080'"
-Add-Content $PROFILE "`$env:ANTHROPIC_API_KEY = 'test'"
-. $PROFILE
+Settings → API Configuration:
+```
+Provider: OpenAI Compatible
+API URL: http://localhost:8080/v1
+API Key: any-value
+Model: gemini-3-flash
 ```
 
-**Windows (Command Prompt):**
+### Factory Droid
 
-```cmd
-setx ANTHROPIC_BASE_URL "http://localhost:8080"
-setx ANTHROPIC_API_KEY "test"
+Configure provider:
+```
+Type: OpenAI
+Base URL: http://localhost:8080/v1
+API Key: any-value
 ```
 
-Restart your terminal for changes to take effect.
+### Crush
 
-### Run Claude Code
-
-```bash
-# Make sure the proxy is running first
-antigravity-claude-proxy start
-
-# In another terminal, run Claude Code
-claude
+Settings → AI Provider:
 ```
-
-> **Note:** If Claude Code asks you to select a login method, add `"hasCompletedOnboarding": true` to `~/.claude.json` (macOS/Linux) or `%USERPROFILE%\.claude.json` (Windows), then restart your terminal and try again.
+Provider: OpenAI Compatible
+Endpoint: http://localhost:8080/v1
+Key: any-value
+```
 
 ---
 
-## Using with LiteLLM
+## SDK Integration
 
-You can use this proxy as a backend for [LiteLLM](https://github.com/BerriAI/litellm) to access Antigravity's free Claude and Gemini models from any OpenAI-compatible client.
-
-### LiteLLM Configuration
-
-Create a `litellm-config.yaml`:
-
-```yaml
-model_list:
-  # Claude models via Antigravity
-  - model_name: claude-sonnet-4-5-thinking
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      max_input_tokens: 200000
-      max_output_tokens: 16000
-    litellm_params:
-      model: openai/claude-sonnet-4-5-thinking
-      api_base: http://localhost:8080/v1
-      api_key: "not-needed"
-      stream: true
-
-  - model_name: claude-opus-4-5-thinking
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      max_input_tokens: 200000
-      max_output_tokens: 16000
-    litellm_params:
-      model: openai/claude-opus-4-5-thinking
-      api_base: http://localhost:8080/v1
-      api_key: "not-needed"
-      stream: true
-
-  - model_name: claude-sonnet-4-5
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      max_input_tokens: 200000
-      max_output_tokens: 8192
-    litellm_params:
-      model: openai/claude-sonnet-4-5
-      api_base: http://localhost:8080/v1
-      api_key: "not-needed"
-      stream: true
-
-  # Gemini models via Antigravity
-  - model_name: gemini-3-flash
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      max_input_tokens: 1048576
-      max_output_tokens: 16384
-    litellm_params:
-      model: openai/gemini-3-flash
-      api_base: http://localhost:8080/v1
-      api_key: "not-needed"
-      stream: true
-
-  - model_name: gemini-3-pro-high
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      max_input_tokens: 1048576
-      max_output_tokens: 16384
-    litellm_params:
-      model: openai/gemini-3-pro-high
-      api_base: http://localhost:8080/v1
-      api_key: "not-needed"
-      stream: true
-
-  - model_name: gemini-3-pro-low
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      max_input_tokens: 1048576
-      max_output_tokens: 16384
-    litellm_params:
-      model: openai/gemini-3-pro-low
-      api_base: http://localhost:8080/v1
-      api_key: "not-needed"
-      stream: true
-```
-
-> **Note:** The `model_info` section tells LiteLLM about each model's capabilities. The proxy internally caps Gemini output at 16,384 tokens. The `openai/` prefix works because the proxy supports both OpenAI (`/v1/chat/completions`) and Anthropic (`/v1/messages`) API formats.
-
-### Docker Compose with LiteLLM
-
-Run both the proxy and LiteLLM together:
-
-```yaml
-version: '3.8'
-
-services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
-    volumes:
-      - ./data:/root/.config/antigravity-proxy
-    environment:
-      - PORT=8080
-    restart: unless-stopped
-
-  litellm:
-    image: ghcr.io/berriai/litellm:main-latest
-    container_name: litellm
-    ports:
-      - "4000:4000"
-    volumes:
-      - ./litellm-config.yaml:/app/config.yaml
-    command: ["--config", "/app/config.yaml", "--port", "4000"]
-    depends_on:
-      - antigravity-proxy
-    environment:
-      - LITELLM_MASTER_KEY=sk-your-master-key
-    restart: unless-stopped
-```
-
-> **Note:** When running in Docker, use `http://antigravity-proxy:8080/v1` as the `api_base` in your LiteLLM config (container name, not localhost).
-
-### Start the Stack
-
-```bash
-# Make sure you have accounts configured in ./data/accounts.json first
-docker-compose up -d
-
-# Test via LiteLLM
-curl http://localhost:4000/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-your-master-key" \
-  -d '{
-    "model": "claude-sonnet-4-5-thinking",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
-```
-
-### Use with OpenAI SDK
+### OpenAI Python SDK
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:4000/v1",
-    api_key="sk-your-master-key"
+    base_url="http://localhost:8080/v1",
+    api_key="any-value"
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-5-thinking",
+    model="gemini-3-flash",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 print(response.choices[0].message.content)
 ```
 
----
+### OpenAI JavaScript SDK
 
-## Available Models
+```javascript
+import OpenAI from 'openai';
 
-### Claude Models
+const client = new OpenAI({
+  baseURL: 'http://localhost:8080/v1',
+  apiKey: 'any-value'
+});
 
-| Model ID | Context | Max Output | Vision | Tools | Thinking |
-|----------|---------|------------|--------|-------|----------|
-| `claude-sonnet-4-5-thinking` | 200K | 16K | ✓ | ✓ | ✓ |
-| `claude-opus-4-5-thinking` | 200K | 16K | ✓ | ✓ | ✓ |
-| `claude-sonnet-4-5` | 200K | 8K | ✓ | ✓ | ✗ |
+const response = await client.chat.completions.create({
+  model: 'gemini-3-flash',
+  messages: [{ role: 'user', content: 'Hello!' }]
+});
+console.log(response.choices[0].message.content);
+```
 
-### Gemini Models
+### Anthropic Python SDK
 
-| Model ID | Context | Max Output | Vision | Tools | Thinking |
-|----------|---------|------------|--------|-------|----------|
-| `gemini-3-flash` | 1M | 16K* | ✓ | ✓ | ✓ |
-| `gemini-3-pro-low` | 1M | 16K* | ✓ | ✓ | ✓ |
-| `gemini-3-pro-high` | 1M | 16K* | ✓ | ✓ | ✓ |
+```python
+import anthropic
 
-*\*Proxy caps Gemini output at 16,384 tokens*
+client = anthropic.Anthropic(
+    base_url="http://localhost:8080",
+    api_key="any-value"
+)
 
-### Model Capabilities
+message = client.messages.create(
+    model="claude-sonnet-4-5-thinking",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(message.content[0].text)
+```
 
-All models support:
-- **Vision**: Image understanding and analysis
-- **Function Calling**: Tool use with parallel execution support
-- **Streaming**: Server-sent events for real-time responses
-- **Prompt Caching**: Automatic caching for repeated context
-
-Gemini models include full thinking support with `thoughtSignature` handling for multi-turn conversations.
-
----
-
-## Multi-Account Load Balancing
-
-When you add multiple accounts, the proxy automatically:
-
-- **Sticky account selection**: Stays on the same account to maximize prompt cache hits
-- **Smart rate limit handling**: Waits for short rate limits (≤2 min), switches accounts for longer ones
-- **Automatic cooldown**: Rate-limited accounts become available after reset time expires
-- **Invalid account detection**: Accounts needing re-authentication are marked and skipped
-- **Prompt caching support**: Stable session IDs enable cache hits across conversation turns
-
-Check account status anytime:
+### cURL
 
 ```bash
-curl "http://localhost:8080/account-limits?format=table"
+# OpenAI format
+curl http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer any-value" \
+  -d '{
+    "model": "gemini-3-flash",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+
+# Anthropic format
+curl http://localhost:8080/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: any-value" \
+  -d '{
+    "model": "claude-sonnet-4-5-thinking",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
+
+---
+
+## LiteLLM Integration
+
+Create `litellm-config.yaml`:
+
+```yaml
+model_list:
+  - model_name: claude-sonnet-4-5-thinking
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      max_input_tokens: 200000
+      max_output_tokens: 16000
+    litellm_params:
+      model: openai/claude-sonnet-4-5-thinking
+      api_base: http://antigravity-gateway:8080/v1
+      api_key: "not-needed"
+      stream: true
+
+  - model_name: gemini-3-flash
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      max_input_tokens: 1048576
+      max_output_tokens: 16384
+    litellm_params:
+      model: openai/gemini-3-flash
+      api_base: http://antigravity-gateway:8080/v1
+      api_key: "not-needed"
+      stream: true
 ```
 
 ---
@@ -500,161 +388,94 @@ curl "http://localhost:8080/account-limits?format=table"
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/account-limits` | GET | Account status and quota limits (add `?format=table` for ASCII table) |
+| `/v1/chat/completions` | POST | OpenAI Chat Completions API |
 | `/v1/messages` | POST | Anthropic Messages API |
-| `/v1/chat/completions` | POST | OpenAI Chat Completions API (compatible with LiteLLM `openai/` prefix) |
 | `/v1/models` | GET | List available models |
+| `/health` | GET | Health check |
+| `/account-limits` | GET | Account quotas (add `?format=table`) |
 | `/refresh-token` | POST | Force token refresh |
 
-### OpenAI Compatibility
+---
 
-The proxy supports both Anthropic and OpenAI API formats. Use whichever fits your client:
+## Multi-Account Load Balancing
 
-**Anthropic format** (`/v1/messages`):
+Add multiple Google accounts for higher throughput and automatic failover:
+
 ```bash
-curl http://localhost:8080/v1/messages \
-  -H "Content-Type: application/json" \
-  -d '{"model": "gemini-3-flash", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 100}'
+agw accounts add  # Add first account
+agw accounts add  # Add second account
+agw accounts add  # Add third account
 ```
 
-**OpenAI format** (`/v1/chat/completions`):
-```bash
-curl http://localhost:8080/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model": "gemini-3-flash", "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 100}'
-```
+The gateway automatically:
+- Uses sticky account selection for prompt cache efficiency
+- Switches accounts when rate limited
+- Waits for short rate limits (≤2 min)
+- Falls back to alternate models when all accounts exhausted
 
-For LiteLLM, you can now use either prefix:
-```yaml
-# Both work:
-model: openai/gemini-3-flash      # Uses /v1/chat/completions
-model: anthropic/gemini-3-flash   # Uses /v1/messages
+Check account status:
+```bash
+curl "http://localhost:8080/account-limits?format=table"
 ```
 
 ---
 
-## Testing
+## Environment Variables
 
-Run the test suite (requires server running):
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | Server port |
+| `DEBUG` | `false` | Enable debug logging |
+| `FALLBACK` | `false` | Enable model fallback on quota exhaustion |
 
+---
+
+## Migration from v1.x
+
+If upgrading from `antigravity-claude-proxy`:
+
+1. **Config path changed**: `~/.config/antigravity-proxy` → `~/.config/antigravity-gateway`
+2. **Package name changed**: `antigravity-claude-proxy` → `antigravity-gateway`
+3. **Docker image changed**: `ghcr.io/johnneerdael/antigravity-claude-proxy` → `ghcr.io/johnneerdael/antigravity-gateway`
+4. **New CLI alias**: `agw` (short for `antigravity-gateway`)
+
+Copy your existing accounts:
 ```bash
-# Start server in one terminal
-npm start
-
-# Run tests in another terminal
-npm test
-```
-
-Individual tests:
-
-```bash
-npm run test:signatures    # Thinking signatures
-npm run test:multiturn     # Multi-turn with tools
-npm run test:streaming     # Streaming SSE events
-npm run test:interleaved   # Interleaved thinking
-npm run test:images        # Image processing
-npm run test:caching       # Prompt caching
+cp -r ~/.config/antigravity-proxy/* ~/.config/antigravity-gateway/
 ```
 
 ---
 
 ## Troubleshooting
 
-### "Could not extract token from Antigravity"
+### "No accounts available"
 
-If using single-account mode with Antigravity:
-1. Make sure Antigravity app is installed and running
-2. Ensure you're logged in to Antigravity
+Add Google accounts: `agw accounts add`
 
-Or add accounts via OAuth instead: `antigravity-claude-proxy accounts add`
+### Rate limited
 
-### 401 Authentication Errors
+- Add more accounts for load balancing
+- Enable fallback mode: `agw start --fallback`
+- Wait for quota reset (shown in error message)
 
-The token might have expired. Try:
-```bash
-curl -X POST http://localhost:8080/refresh-token
-```
+### Connection refused
 
-Or re-authenticate the account:
-```bash
-antigravity-claude-proxy accounts
-```
+Ensure the gateway is running: `agw start`
 
-### Rate Limiting (429)
+### Model not found
 
-With multiple accounts, the proxy automatically switches to the next available account. With a single account, you'll need to wait for the rate limit to reset.
-
-### Account Shows as "Invalid"
-
-Re-authenticate the account:
-```bash
-antigravity-claude-proxy accounts
-# Choose "Re-authenticate" for the invalid account
-```
-
-### Docker: Container can't find accounts
-
-Make sure the volume is mounted correctly and `accounts.json` exists:
-```bash
-ls -la ./data/accounts.json
-```
-
-If missing, add accounts first (see Installation section).
-
----
-
-## Safety, Usage, and Risk Notices
-
-### Intended Use
-
-- Personal / internal development only
-- Respect internal quotas and data handling policies
-- Not for production services or bypassing intended limits
-
-### Not Suitable For
-
-- Production application traffic
-- High-volume automated extraction
-- Any use that violates Acceptable Use Policies
-
-### Warning (Assumption of Risk)
-
-By using this software, you acknowledge and accept the following:
-
-- **Terms of Service risk**: This approach may violate the Terms of Service of AI model providers (Anthropic, Google, etc.). You are solely responsible for ensuring compliance with all applicable terms and policies.
-
-- **Account risk**: Providers may detect this usage pattern and take punitive action, including suspension, permanent ban, or loss of access to paid subscriptions.
-
-- **No guarantees**: Providers may change APIs, authentication, or policies at any time, which can break this method without notice.
-
-- **Assumption of risk**: You assume all legal, financial, and technical risks. The authors and contributors of this project bear no responsibility for any consequences arising from your use.
-
-**Use at your own risk. Proceed only if you understand and accept these risks.**
-
----
-
-## Legal
-
-- **Not affiliated with Google or Anthropic.** This is an independent open-source project and is not endorsed by, sponsored by, or affiliated with Google LLC or Anthropic PBC.
-
-- "Antigravity", "Gemini", "Google Cloud", and "Google" are trademarks of Google LLC.
-
-- "Claude" and "Anthropic" are trademarks of Anthropic PBC.
-
-- Software is provided "as is", without warranty. You are responsible for complying with all applicable Terms of Service and Acceptable Use Policies.
-
----
-
-## Credits
-
-This project is based on insights and code from:
-
-- [opencode-antigravity-auth](https://github.com/NoeFabris/opencode-antigravity-auth) - Antigravity OAuth plugin for OpenCode
-- [claude-code-proxy](https://github.com/1rgs/claude-code-proxy) - Anthropic API proxy using LiteLLM
+Use exact model IDs from `/v1/models` endpoint. Common models:
+- `gemini-3-flash` (recommended for speed)
+- `claude-sonnet-4-5-thinking` (recommended for quality)
 
 ---
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE)
+
+## Credits
+
+Based on work from:
+- [opencode-antigravity-auth](https://github.com/NoeFabris/opencode-antigravity-auth)
+- [badri-s2001/antigravity-claude-proxy](https://github.com/badri-s2001/antigravity-claude-proxy)

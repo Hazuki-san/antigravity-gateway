@@ -27,11 +27,11 @@ Create a `docker-compose.yml`:
 version: '3.8'
 
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
+    container_name: antigravity-gateway
     volumes:
-      - ./data:/root/.config/antigravity-proxy
+      - ./data:/root/.config/antigravity-gateway
     environment:
       - PORT=8080
       - DEBUG=false
@@ -51,7 +51,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - antigravity-proxy
+      - antigravity-gateway
     restart: unless-stopped
     networks:
       - proxy-network
@@ -81,8 +81,8 @@ api.example.com {
         api-user $2a$14$HASH_FROM_CADDY_HASH_PASSWORD
     }
 
-    # Reverse proxy to antigravity-proxy container
-    reverse_proxy antigravity-proxy:8080 {
+    # Reverse proxy to antigravity-gateway container
+    reverse_proxy antigravity-gateway:8080 {
         # Required for SSE streaming
         flush_interval -1
         
@@ -113,7 +113,7 @@ api.example.com {
 
     # Block requests without valid token
     handle @valid_token {
-        reverse_proxy antigravity-proxy:8080 {
+        reverse_proxy antigravity-gateway:8080 {
             flush_interval -1
             health_uri /health
             health_interval 30s
@@ -142,21 +142,21 @@ api.example.com {
     @token3 header Authorization "Bearer sk-service-key"
 
     handle @token1 {
-        reverse_proxy antigravity-proxy:8080 {
+        reverse_proxy antigravity-gateway:8080 {
             flush_interval -1
             header_up X-User-ID "user1"
         }
     }
 
     handle @token2 {
-        reverse_proxy antigravity-proxy:8080 {
+        reverse_proxy antigravity-gateway:8080 {
             flush_interval -1
             header_up X-User-ID "user2"
         }
     }
 
     handle @token3 {
-        reverse_proxy antigravity-proxy:8080 {
+        reverse_proxy antigravity-gateway:8080 {
             flush_interval -1
             header_up X-User-ID "service"
         }
@@ -178,7 +178,7 @@ For local testing without a domain:
         api $2a$14$HASH_FROM_CADDY_HASH_PASSWORD
     }
 
-    reverse_proxy antigravity-proxy:8080 {
+    reverse_proxy antigravity-gateway:8080 {
         flush_interval -1
     }
 }
@@ -199,8 +199,8 @@ docker run --rm caddy:2-alpine caddy hash-password --plaintext "your-secret-api-
 ```bash
 # Add accounts first (if not already done)
 docker run -it --rm \
-  -v $(pwd)/data:/root/.config/antigravity-proxy \
-  ghcr.io/johnneerdael/antigravity-claude-proxy:latest \
+  -v $(pwd)/data:/root/.config/antigravity-gateway \
+  ghcr.io/johnneerdael/antigravity-gateway:latest \
   node bin/cli.js accounts add --no-browser
 
 # Start the stack
@@ -304,11 +304,11 @@ Complete stack with Antigravity Proxy, Caddy, and LiteLLM:
 version: '3.8'
 
 services:
-  antigravity-proxy:
-    image: ghcr.io/johnneerdael/antigravity-claude-proxy:latest
-    container_name: antigravity-proxy
+  antigravity-gateway:
+    image: ghcr.io/johnneerdael/antigravity-gateway:latest
+    container_name: antigravity-gateway
     volumes:
-      - ./data:/root/.config/antigravity-proxy
+      - ./data:/root/.config/antigravity-gateway
     environment:
       - PORT=8080
       - DEBUG=false
@@ -328,7 +328,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - antigravity-proxy
+      - antigravity-gateway
     restart: unless-stopped
     networks:
       - internal
@@ -345,7 +345,7 @@ services:
     environment:
       - LITELLM_MASTER_KEY=sk-litellm-master-key
       # For internal network access (bypasses Caddy)
-      - ANTIGRAVITY_INTERNAL_URL=http://antigravity-proxy:8080/v1
+      - ANTIGRAVITY_INTERNAL_URL=http://antigravity-gateway:8080/v1
     restart: unless-stopped
     networks:
       - internal
@@ -372,7 +372,7 @@ api.example.com {
     }
 
     handle @valid_token {
-        reverse_proxy antigravity-proxy:8080 {
+        reverse_proxy antigravity-gateway:8080 {
             flush_interval -1
             
             transport http {
@@ -405,7 +405,7 @@ api.example.com {
 
 # Health check endpoint (no auth required)
 api.example.com/health {
-    reverse_proxy antigravity-proxy:8080
+    reverse_proxy antigravity-gateway:8080
 }
 ```
 
@@ -461,9 +461,9 @@ curl https://api.example.com/v1/chat/completions \
 
 ---
 
-## Claude Code CLI Configuration
+## AI clients Configuration
 
-For using Claude Code CLI through the Caddy proxy:
+For using AI clients through the Caddy proxy:
 
 ### With Basic Auth
 
@@ -507,10 +507,10 @@ reverse_proxy backend:8080 {
 
 ### 502 Bad Gateway
 
-Check if the antigravity-proxy container is running:
+Check if the antigravity-gateway container is running:
 
 ```bash
-docker-compose logs antigravity-proxy
+docker-compose logs antigravity-gateway
 curl http://localhost:8080/health  # Direct access
 ```
 
@@ -541,7 +541,7 @@ curl -v -H "Authorization: Bearer sk-your-key" https://api.example.com/health
 Increase timeouts in Caddyfile:
 
 ```caddyfile
-reverse_proxy antigravity-proxy:8080 {
+reverse_proxy antigravity-gateway:8080 {
     transport http {
         dial_timeout 5s
         response_header_timeout 300s  # 5 minutes for long responses

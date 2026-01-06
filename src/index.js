@@ -1,6 +1,6 @@
 /**
- * Antigravity Claude Proxy
- * Entry point - starts the proxy server
+ * Antigravity Gateway
+ * Entry point - starts the universal AI gateway server
  */
 
 import app from './server.js';
@@ -9,12 +9,10 @@ import { logger } from './utils/logger.js';
 import path from 'path';
 import os from 'os';
 
-// Parse command line arguments
 const args = process.argv.slice(2);
 const isDebug = args.includes('--debug') || process.env.DEBUG === 'true';
 const isFallbackEnabled = args.includes('--fallback') || process.env.FALLBACK === 'true';
 
-// Initialize logger
 logger.setDebug(isDebug);
 
 if (isDebug) {
@@ -25,25 +23,20 @@ if (isFallbackEnabled) {
     logger.info('Model fallback mode enabled');
 }
 
-// Export fallback flag for server to use
 export const FALLBACK_ENABLED = isFallbackEnabled;
 
 const PORT = process.env.PORT || DEFAULT_PORT;
 
-// Home directory for account storage
 const HOME_DIR = os.homedir();
-const CONFIG_DIR = path.join(HOME_DIR, '.antigravity-claude-proxy');
+const CONFIG_DIR = path.join(HOME_DIR, '.config/antigravity-gateway');
 
 app.listen(PORT, () => {
-    // Clear console for a clean start
     console.clear();
 
     const border = '║';
-    // align for 2-space indent (60 chars), align4 for 4-space indent (58 chars)
     const align = (text) => text + ' '.repeat(Math.max(0, 60 - text.length));
     const align4 = (text) => text + ' '.repeat(Math.max(0, 58 - text.length));
     
-    // Build Control section dynamically
     let controlSection = '║  Control:                                                    ║\n';
     if (!isDebug) {
         controlSection += '║    --debug            Enable debug logging                   ║\n';
@@ -53,7 +46,6 @@ app.listen(PORT, () => {
     }
     controlSection += '║    Ctrl+C             Stop server                            ║';
 
-    // Build status section if any modes are active
     let statusSection = '';
     if (isDebug || isFallbackEnabled) {
         statusSection = '║                                                              ║\n';
@@ -68,35 +60,31 @@ app.listen(PORT, () => {
 
     logger.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║           Antigravity Claude Proxy Server                    ║
+║               Antigravity Gateway v2.0.0                     ║
+║         Universal AI Gateway for Claude & Gemini             ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║
 ${border}  ${align(`Server running at: http://localhost:${PORT}`)}${border}
 ${statusSection}║                                                              ║
 ${controlSection}
 ║                                                              ║
-║  Endpoints:                                                  ║
-║    POST /v1/messages         - Anthropic Messages API        ║
-║    POST /v1/chat/completions - OpenAI Chat Completions API   ║
+║  API Endpoints:                                              ║
+║    POST /v1/chat/completions - OpenAI-compatible API         ║
+║    POST /v1/messages         - Anthropic-compatible API      ║
 ║    GET  /v1/models           - List available models         ║
 ║    GET  /health              - Health check                  ║
 ║    GET  /account-limits      - Account status & quotas       ║
-║    POST /refresh-token       - Force token refresh           ║
 ║                                                              ║
 ${border}  ${align(`Configuration:`)}${border}
 ${border}    ${align4(`Storage: ${CONFIG_DIR}`)}${border}
 ║                                                              ║
-║  Usage with Claude Code:                                     ║
-${border}    ${align4(`export ANTHROPIC_BASE_URL=http://localhost:${PORT}`)}${border}
-║    export ANTHROPIC_API_KEY=dummy                            ║
-║    claude                                                    ║
+║  Quick Start (any OpenAI-compatible client):                 ║
+${border}    ${align4(`Base URL: http://localhost:${PORT}/v1`)}${border}
+║    API Key: any-value                                        ║
 ║                                                              ║
 ║  Add Google accounts:                                        ║
-║    npm run accounts                                          ║
-║                                                              ║
-║  Prerequisites (if no accounts configured):                  ║
-║    - Antigravity must be running                             ║
-║    - Have a chat panel open in Antigravity                   ║
+║    antigravity-gateway accounts add                          ║
+║    agw accounts add                                          ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
   `);

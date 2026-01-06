@@ -2,7 +2,7 @@
  * Image Support Test
  *
  * Tests that images can be sent to the API with thinking models.
- * Simulates Claude Code sending screenshots or images for analysis.
+ * Simulates AI client sending screenshots or images for analysis.
  *
  * Runs for both Claude and Gemini model families.
  */
