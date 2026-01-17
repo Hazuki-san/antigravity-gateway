@@ -48,14 +48,9 @@ export const ANTIGRAVITY_ENDPOINT_FALLBACKS = [
 ];
 
 // Required headers for Antigravity API requests
+// Note: Antigravity-Manager only sends Authorization, Content-Type, User-Agent
 export const ANTIGRAVITY_HEADERS = {
-    'User-Agent': getPlatformUserAgent(),
-    'X-Goog-Api-Client': 'google-cloud-sdk vscode_cloudshelleditor/0.1',
-    'Client-Metadata': JSON.stringify({
-        ideType: 'IDE_UNSPECIFIED',
-        platform: 'PLATFORM_UNSPECIFIED',
-        pluginType: 'GEMINI'
-    })
+    'User-Agent': getPlatformUserAgent()
 };
 
 // Default project ID if none can be discovered
