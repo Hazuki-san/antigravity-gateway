@@ -69,6 +69,9 @@ export function buildCloudCodeRequest(anthropicRequest, projectId) {
         requestType: getRequestType(model) // Required by Cloud Code API
     };
 
+    // Debug: log the full request payload
+    console.log('[DEBUG] Cloud Code request payload:', JSON.stringify(payload, null, 2).substring(0, 2000));
+
     return payload;
 }
 
