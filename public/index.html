@@ -259,6 +259,103 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Mobile Mode: For network access where popup doesn't work -->
+                <div x-data="{ 
+                    mobileStep: 0, 
+                    authUrl: '', 
+                    callbackUrl: '', 
+                    loading: false,
+                    async startMobileAuth() {
+                        this.loading = true;
+                        try {
+                            const res = await fetch('/api/auth/url?noBrowser=true');
+                            const data = await res.json();
+                            if (data.status === 'ok') {
+                                this.authUrl = data.url;
+                                this.mobileStep = 1;
+                            } else {
+                                Alpine.store('global').showToast(data.error || 'Failed to get auth URL', 'error');
+                            }
+                        } catch (e) {
+                            Alpine.store('global').showToast('Error: ' + e.message, 'error');
+                        }
+                        this.loading = false;
+                    },
+                    async completeAuth() {
+                        if (!this.callbackUrl.includes('code=')) {
+                            Alpine.store('global').showToast('Invalid URL - must contain code parameter', 'error');
+                            return;
+                        }
+                        this.loading = true;
+                        try {
+                            const res = await fetch('/api/auth/complete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ callbackUrl: this.callbackUrl })
+                            });
+                            const data = await res.json();
+                            if (data.status === 'ok') {
+                                Alpine.store('global').showToast(`Account ${data.email} added!`, 'success');
+                                document.getElementById('add_account_modal').close();
+                                Alpine.store('data').fetchData();
+                                this.mobileStep = 0;
+                                this.callbackUrl = '';
+                                this.authUrl = '';
+                            } else {
+                                Alpine.store('global').showToast(data.error || 'Failed to complete auth', 'error');
+                            }
+                        } catch (e) {
+                            Alpine.store('global').showToast('Error: ' + e.message, 'error');
+                        }
+                        this.loading = false;
+                    }
+                }" class="collapse collapse-arrow bg-space-800 border border-space-border/50">
+                    <input type="checkbox" />
+                    <div class="collapse-title text-sm font-medium text-yellow-400">
+                        📱 Mobile / Network Mode
+                    </div>
+                    <div class="collapse-content space-y-3">
+                        <p class="text-xs text-gray-500">Use this if you're accessing from a phone or other device on
+                            the network.</p>
+
+                        <!-- Step 0: Start -->
+                        <template x-if="mobileStep === 0">
+                            <button
+                                class="btn btn-sm btn-outline border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 w-full"
+                                @click="startMobileAuth" :disabled="loading">
+                                <span x-show="!loading">Step 1: Get Auth URL</span>
+                                <span x-show="loading" class="loading loading-spinner loading-sm"></span>
+                            </button>
+                        </template>
+
+                        <!-- Step 1: Show URL -->
+                        <template x-if="mobileStep === 1">
+                            <div class="space-y-2">
+                                <p class="text-xs text-gray-400">1. Copy this URL and open it in your browser:</p>
+                                <div class="flex gap-2">
+                                    <input type="text" readonly :value="authUrl"
+                                        class="input input-sm input-bordered bg-black border-space-border text-gray-300 flex-1 font-mono text-xs">
+                                    <button class="btn btn-sm btn-ghost"
+                                        @click="navigator.clipboard.writeText(authUrl); Alpine.store('global').showToast('Copied!', 'success')">
+                                        📋
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400">2. Login to Google. After login, it will redirect to a
+                                    page that won't load (localhost). That's OK!</p>
+                                <p class="text-xs text-gray-400">3. Copy the FULL URL from your browser's address bar
+                                    and paste it below:</p>
+                                <textarea x-model="callbackUrl" placeholder="Paste the full localhost URL here..."
+                                    class="textarea textarea-bordered bg-black border-space-border text-gray-300 w-full font-mono text-xs h-20"></textarea>
+                                <button class="btn btn-sm bg-neon-green text-black hover:bg-green-400 w-full"
+                                    @click="completeAuth" :disabled="loading || !callbackUrl">
+                                    <span x-show="!loading">Complete Authentication</span>
+                                    <span x-show="loading" class="loading loading-spinner loading-sm"></span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
 
             <div class="modal-action">
