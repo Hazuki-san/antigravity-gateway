@@ -85,7 +85,10 @@ src/
 ├── auth/                       # Authentication
 │   ├── oauth.js                # Google OAuth with PKCE
 │   ├── token-extractor.js      # Legacy token extraction from DB
-│   └── database.js             # SQLite database access
+│   └── database.js             # SQLite database access (optional)
+│
+├── webui/                      # Web Management Interface
+│   └── index.js                # Express router and API endpoints
 │
 ├── cli/                        # CLI tools
 │   └── accounts.js             # Account management CLI
@@ -102,18 +105,62 @@ src/
 │
 └── utils/                      # Utilities
     ├── helpers.js              # formatDuration, sleep
-    └── logger.js               # Structured logging
+    ├── logger.js               # Structured logging
+    └── claude-config.js        # Claude CLI settings helper
+```
+
+**Frontend Structure (public/):**
+
+```
+public/
+├── index.html                  # Main entry point
+├── css/
+│   └── style.css               # Compiled Tailwind CSS
+├── js/
+│   ├── app.js                  # Main application logic (Alpine.js)
+│   ├── store.js                # Global state management
+│   ├── data-store.js           # Shared data store (accounts, models, quotas)
+│   ├── settings-store.js       # Settings management store
+│   └── components/             # UI Components
+│       ├── dashboard.js        # Main dashboard orchestrator
+│       ├── account-manager.js  # Account list & OAuth handling
+│       ├── logs-viewer.js      # Live log streaming
+│       └── claude-config.js    # CLI settings editor
+└── views/                      # HTML partials (loaded dynamically)
+    ├── dashboard.html
+    ├── accounts.html
+    ├── settings.html
+    └── logs.html
 ```
 
 **Key Modules:**
 
 - **src/server.js**: Express server exposing both OpenAI (`/v1/chat/completions`) and Anthropic (`/v1/messages`) endpoints
+- **src/webui/index.js**: WebUI backend handling API routes (`/api/*`) for config, accounts, and logs
 - **src/format/openai-compat.js**: Converts between OpenAI Chat Completions and Anthropic Messages formats
 - **src/cloudcode/**: Cloud Code API client with retry/failover logic, streaming and non-streaming support
 - **src/account-manager/**: Multi-account pool with sticky selection, rate limit handling, and automatic cooldown
-- **src/auth/**: Authentication including Google OAuth, token extraction, and database access
+- **src/auth/**: Authentication including Google OAuth, token extraction, and database access (optional)
 - **src/format/**: Format conversion between OpenAI, Anthropic, and Google Generative AI formats
 - **src/constants.js**: API endpoints, model mappings, fallback config, OAuth config, and all configuration values
+
+**Web Management UI:**
+
+- **Stack**: Vanilla JS + Alpine.js + Tailwind CSS + DaisyUI
+- **Features**:
+  - Real-time dashboard with quota visualization
+  - Account management via OAuth in browser
+  - Live log streaming via Server-Sent Events (SSE)
+  - Config editor for proxy and Claude CLI settings
+- **Security**: Optional password protection via `WEBUI_PASSWORD` env var
+- **Access**: Navigate to `http://localhost:8080` after starting the server
+
+**WebUI APIs:**
+- `/api/accounts/*` - Account management (list, add, remove, refresh)
+- `/api/config/*` - Server configuration (read/write)
+- `/api/claude/config` - Claude CLI settings
+- `/api/logs/stream` - SSE endpoint for real-time logs
+- `/api/auth/url` - Generate Google OAuth URL
 
 **Multi-Account Load Balancing:**
 - Sticky account selection for prompt caching (stays on same account across turns)
