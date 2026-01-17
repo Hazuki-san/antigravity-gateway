@@ -101,11 +101,26 @@
 }
 
 /* Mobile Responsive */
+/* Hide mobile nav on desktop */
+.mobile-nav {
+    display: none;
+}
+
 @media (max-width: 768px) {
+
+    /* Show mobile nav on mobile */
+    .mobile-nav {
+        display: flex !important;
+    }
 
     /* Hide sidebar on mobile */
     .w-64 {
         display: none !important;
+    }
+
+    /* Add padding for bottom nav */
+    body {
+        padding-bottom: 60px;
     }
 
     /* Make navbar simpler */
