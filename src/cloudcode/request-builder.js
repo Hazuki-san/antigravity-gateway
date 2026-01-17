@@ -15,52 +15,34 @@ import { deriveSessionId } from './session-manager.js';
 
 /**
  * Model name mapping for Google Cloud Code API
- * Transforms friendly model names to internal API model names
- * Based on Antigravity-Manager's model_mapping.rs
+ * Note: Antigravity-Manager sends model names directly (gemini-3-pro-high, not gemini-3-pro-preview)
+ * The API accepts these friendly names directly
  */
-const MODEL_NAME_MAPPING = {
-    // Gemini 3 models - all map to gemini-3-pro-preview
-    'gemini-3-pro-high': 'gemini-3-pro-preview',
-    'gemini-3-pro-low': 'gemini-3-pro-preview',
-    'gemini-3-pro': 'gemini-3-pro-preview',
-
-    // Direct pass-through models (already correct)
-    'gemini-3-pro-preview': 'gemini-3-pro-preview',
-    'gemini-3-flash': 'gemini-3-flash',
-    'gemini-3-pro-image': 'gemini-3-pro-image',
-    'gemini-2.5-flash': 'gemini-2.5-flash',
-    'gemini-2.5-flash-lite': 'gemini-2.5-flash-lite',
-    'gemini-2.5-flash-thinking': 'gemini-2.5-flash-thinking',
-
-    // Claude models pass through
-    'claude-opus-4-5-thinking': 'claude-opus-4-5-thinking',
-    'claude-sonnet-4-5': 'claude-sonnet-4-5',
-    'claude-sonnet-4-5-thinking': 'claude-sonnet-4-5-thinking'
-};
 
 /**
  * Map user-facing model name to internal API model name
+ * Most models pass through directly - the API understands friendly names
  * @param {string} model - User-facing model name
  * @returns {string} Internal API model name
  */
 function mapToApiModelName(model) {
-    // Check exact match first
-    if (MODEL_NAME_MAPPING[model]) {
-        return MODEL_NAME_MAPPING[model];
-    }
-
-    // Check for gemini-3-pro-image variants (with aspect ratio suffixes)
-    if (model.startsWith('gemini-3-pro-image')) {
-        return model; // Pass through with suffix
-    }
-
-    // Pass through gemini-* and claude-* models as-is
-    if (model.startsWith('gemini-') || model.startsWith('claude-')) {
-        return model;
-    }
-
-    // Default: pass through unchanged
+    // Pass through all model names directly
+    // Antigravity-Manager sends gemini-3-pro-high, gemini-3-flash, etc. as-is
     return model;
+}
+
+/**
+ * Determine request type based on model and request characteristics
+ * @param {string} model - Model name
+ * @returns {string} Request type: "agent", "web_search", or "image_gen"
+ */
+function getRequestType(model) {
+    // Image generation models
+    if (model.startsWith('gemini-3-pro-image')) {
+        return 'image_gen';
+    }
+    // Default to agent for all other requests
+    return 'agent';
 }
 
 /**
@@ -72,7 +54,7 @@ function mapToApiModelName(model) {
  */
 export function buildCloudCodeRequest(anthropicRequest, projectId) {
     const model = anthropicRequest.model;
-    const apiModel = mapToApiModelName(model); // Transform to API model name
+    const apiModel = mapToApiModelName(model);
     const googleRequest = convertAnthropicToGoogle(anthropicRequest);
 
     // Use stable session ID derived from first user message for cache continuity
@@ -80,10 +62,11 @@ export function buildCloudCodeRequest(anthropicRequest, projectId) {
 
     const payload = {
         project: projectId,
-        model: apiModel, // Use transformed model name
+        model: apiModel,
         request: googleRequest,
         userAgent: 'antigravity',
-        requestId: 'agent-' + crypto.randomUUID()
+        requestId: 'agent-' + crypto.randomUUID(),
+        requestType: getRequestType(model) // Required by Cloud Code API
     };
 
     return payload;
