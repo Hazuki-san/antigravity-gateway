@@ -40,10 +40,11 @@ function getPlatformUserAgent() {
 const ANTIGRAVITY_ENDPOINT_DAILY = 'https://daily-cloudcode-pa.sandbox.googleapis.com';
 const ANTIGRAVITY_ENDPOINT_PROD = 'https://cloudcode-pa.googleapis.com';
 
-// Endpoint fallback order (daily → prod)
+// Endpoint fallback order (prod → daily, matching Antigravity-Manager)
+// PROD is stable and has gemini-3 models; DAILY is for testing new features
 export const ANTIGRAVITY_ENDPOINT_FALLBACKS = [
-    ANTIGRAVITY_ENDPOINT_DAILY,
-    ANTIGRAVITY_ENDPOINT_PROD
+    ANTIGRAVITY_ENDPOINT_PROD,
+    ANTIGRAVITY_ENDPOINT_DAILY
 ];
 
 // Required headers for Antigravity API requests
