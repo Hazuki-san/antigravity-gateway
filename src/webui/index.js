@@ -381,10 +381,16 @@ export function mountWebUI(app, dirname, accountManager) {
     app.get('/api/auth/url', (req, res) => {
         try {
             const { email } = req.query;
-            const { url, verifier, state } = getAuthorizationUrl(email);
 
-            // Store the verifier temporarily
-            pendingOAuthStates.set(state, { verifier, timestamp: Date.now() });
+            // Build redirect URI from request host (for network access from phones, etc.)
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+            const host = req.headers['x-forwarded-host'] || req.headers.host;
+            const redirectUri = `${protocol}://${host}/oauth/callback`;
+
+            const { url, verifier, state } = getAuthorizationUrl(redirectUri);
+
+            // Store the verifier and redirectUri temporarily
+            pendingOAuthStates.set(state, { verifier, redirectUri, timestamp: Date.now() });
 
             // Clean up old states (> 10 mins)
             const now = Date.now();
@@ -424,7 +430,8 @@ export function mountWebUI(app, dirname, accountManager) {
         pendingOAuthStates.delete(state);
 
         try {
-            const accountData = await completeOAuthFlow(code, storedState.verifier);
+            // Pass the same redirectUri that was used when generating the auth URL
+            const accountData = await completeOAuthFlow(code, storedState.verifier, storedState.redirectUri);
 
             // Add or update the account
             accountManager.addAccount({

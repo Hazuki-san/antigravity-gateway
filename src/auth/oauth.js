@@ -32,15 +32,17 @@ function generatePKCE() {
  * Generate authorization URL for Google OAuth
  * Returns the URL and the PKCE verifier (needed for token exchange)
  *
- * @returns {{url: string, verifier: string, state: string}} Auth URL and PKCE data
+ * @param {string} [redirectUri] - Optional custom redirect URI (for WebUI network access)
+ * @returns {{url: string, verifier: string, state: string, redirectUri: string}} Auth URL and PKCE data
  */
-export function getAuthorizationUrl() {
+export function getAuthorizationUrl(redirectUri = null) {
     const { verifier, challenge } = generatePKCE();
     const state = crypto.randomBytes(16).toString('hex');
+    const finalRedirectUri = redirectUri || OAUTH_REDIRECT_URI;
 
     const params = new URLSearchParams({
         client_id: OAUTH_CONFIG.clientId,
-        redirect_uri: OAUTH_REDIRECT_URI,
+        redirect_uri: finalRedirectUri,
         response_type: 'code',
         scope: OAUTH_CONFIG.scopes.join(' '),
         access_type: 'offline',
@@ -53,7 +55,8 @@ export function getAuthorizationUrl() {
     return {
         url: `${OAUTH_CONFIG.authUrl}?${params.toString()}`,
         verifier,
-        state
+        state,
+        redirectUri: finalRedirectUri
     };
 }
 
@@ -223,9 +226,11 @@ export function startCallbackServer(expectedState, timeoutMs = 120000) {
  *
  * @param {string} code - Authorization code from OAuth callback
  * @param {string} verifier - PKCE code verifier
+ * @param {string} [redirectUri] - Optional redirect URI (must match what was used in auth URL)
  * @returns {Promise<{accessToken: string, refreshToken: string, expiresIn: number}>} OAuth tokens
  */
-export async function exchangeCode(code, verifier) {
+export async function exchangeCode(code, verifier, redirectUri = null) {
+    const finalRedirectUri = redirectUri || OAUTH_REDIRECT_URI;
     const response = await fetch(OAUTH_CONFIG.tokenUrl, {
         method: 'POST',
         headers: {
@@ -237,7 +242,7 @@ export async function exchangeCode(code, verifier) {
             code: code,
             code_verifier: verifier,
             grant_type: 'authorization_code',
-            redirect_uri: OAUTH_REDIRECT_URI
+            redirect_uri: finalRedirectUri
         })
     });
 
@@ -366,11 +371,12 @@ export async function discoverProjectId(accessToken) {
  *
  * @param {string} code - Authorization code from OAuth callback
  * @param {string} verifier - PKCE code verifier
+ * @param {string} [redirectUri] - Optional redirect URI (must match what was used in auth URL)
  * @returns {Promise<{email: string, refreshToken: string, accessToken: string, projectId: string|null}>} Complete account info
  */
-export async function completeOAuthFlow(code, verifier) {
+export async function completeOAuthFlow(code, verifier, redirectUri = null) {
     // Exchange code for tokens
-    const tokens = await exchangeCode(code, verifier);
+    const tokens = await exchangeCode(code, verifier, redirectUri);
 
     // Get user email
     const email = await getUserEmail(tokens.accessToken);
