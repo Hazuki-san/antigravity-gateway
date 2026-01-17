@@ -103,13 +103,13 @@ export async function sendMessage(anthropicRequest, accountManager, fallbackEnab
             let lastError = null;
             for (const endpoint of ANTIGRAVITY_ENDPOINT_FALLBACKS) {
                 try {
-                    const url = isThinking
-                        ? `${endpoint}/v1internal:streamGenerateContent?alt=sse`
-                        : `${endpoint}/v1internal:generateContent`;
+                    // [FIX] Always use streamGenerateContent for better quota (like Antigravity-Manager)
+                    // Their code comment: "Auto-converting non-stream request to stream for more lenient quota"
+                    const url = `${endpoint}/v1internal:streamGenerateContent?alt=sse`;
 
                     const response = await fetch(url, {
                         method: 'POST',
-                        headers: buildHeaders(token, model, isThinking ? 'text/event-stream' : 'application/json'),
+                        headers: buildHeaders(token, model, 'text/event-stream'),
                         body: JSON.stringify(payload)
                     });
 
@@ -147,15 +147,8 @@ export async function sendMessage(anthropicRequest, accountManager, fallbackEnab
                         }
                     }
 
-                    // For thinking models, parse SSE and accumulate all parts
-                    if (isThinking) {
-                        return await parseThinkingSSEResponse(response, anthropicRequest.model);
-                    }
-
-                    // Non-thinking models use regular JSON
-                    const data = await response.json();
-                    logger.debug('[CloudCode] Response received');
-                    return convertGoogleToAnthropic(data, anthropicRequest.model);
+                    // [FIX] Always parse SSE response since we always use streaming endpoint
+                    return await parseThinkingSSEResponse(response, anthropicRequest.model);
 
                 } catch (endpointError) {
                     if (isRateLimitError(endpointError)) {
@@ -197,10 +190,10 @@ export async function sendMessage(anthropicRequest, accountManager, fallbackEnab
             }
 
             if (isNetworkError(error)) {
-                 logger.warn(`[CloudCode] Network error for ${account.email}, trying next account... (${error.message})`);
-                 await sleep(1000); // Brief pause before retry
-                 accountManager.pickNext(model); // Advance to next account
-                 continue;
+                logger.warn(`[CloudCode] Network error for ${account.email}, trying next account... (${error.message})`);
+                await sleep(1000); // Brief pause before retry
+                accountManager.pickNext(model); // Advance to next account
+                continue;
             }
 
             throw error;
