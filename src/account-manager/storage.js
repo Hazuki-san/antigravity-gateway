@@ -64,6 +64,7 @@ export async function loadAccounts(configPath = ACCOUNT_CONFIG_PATH) {
 export function loadDefaultAccount(dbPath) {
     try {
         const authData = getAuthStatus(dbPath);
+        // authData is null if SQLite is unavailable (e.g., Termux)
         if (authData?.apiKey) {
             const account = {
                 email: authData.email || 'default@antigravity',

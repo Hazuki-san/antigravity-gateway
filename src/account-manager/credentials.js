@@ -64,9 +64,12 @@ export async function getTokenForAccount(account, tokenCache, onInvalid, onSave)
     } else if (account.source === 'manual' && account.apiKey) {
         token = account.apiKey;
     } else {
-        // Extract from database
+        // Extract from database (desktop only - not available on Termux/Android)
         const dbPath = account.dbPath || ANTIGRAVITY_DB_PATH;
         const authData = getAuthStatus(dbPath);
+        if (!authData) {
+            throw new Error('AUTH_INVALID: SQLite not available. Use `agw accounts add` to add OAuth accounts.');
+        }
         token = authData.apiKey;
     }
 
