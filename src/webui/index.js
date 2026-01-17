@@ -377,17 +377,17 @@ export function mountWebUI(app, dirname, accountManager) {
 
     /**
      * GET /api/auth/url - Get OAuth URL to start the flow
+     * Query params:
+     *   - email: optional hint email
+     *   - noBrowser: if true, returns URL for manual flow (user pastes callback URL)
      */
     app.get('/api/auth/url', (req, res) => {
         try {
-            const { email } = req.query;
+            const { email, noBrowser } = req.query;
 
-            // Build redirect URI from request host (for network access from phones, etc.)
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-            const host = req.headers['x-forwarded-host'] || req.headers.host;
-            const redirectUri = `${protocol}://${host}/oauth/callback`;
-
-            const { url, verifier, state } = getAuthorizationUrl(redirectUri);
+            // For network access (mobile, etc.), we use localhost redirect
+            // and require the user to paste the callback URL back
+            const { url, verifier, state, redirectUri } = getAuthorizationUrl();
 
             // Store the verifier and redirectUri temporarily
             pendingOAuthStates.set(state, { verifier, redirectUri, timestamp: Date.now() });
@@ -400,9 +400,77 @@ export function mountWebUI(app, dirname, accountManager) {
                 }
             }
 
-            res.json({ status: 'ok', url });
+            res.json({
+                status: 'ok',
+                url,
+                // Tell frontend if this is a "noBrowser" flow (paste callback URL)
+                noBrowser: noBrowser === 'true' || noBrowser === '1',
+                state  // Include state so frontend can match when pasting URL
+            });
         } catch (error) {
             logger.error('[WebUI] Error generating auth URL:', error);
+            res.status(500).json({ status: 'error', error: error.message });
+        }
+    });
+
+    /**
+     * POST /api/auth/complete - Complete OAuth by processing a pasted callback URL
+     * Body: { callbackUrl: string } - The full callback URL with code and state params
+     */
+    app.post('/api/auth/complete', async (req, res) => {
+        try {
+            const { callbackUrl } = req.body;
+
+            if (!callbackUrl) {
+                return res.status(400).json({ status: 'error', error: 'callbackUrl is required' });
+            }
+
+            // Parse the callback URL
+            let url;
+            try {
+                url = new URL(callbackUrl);
+            } catch (e) {
+                return res.status(400).json({ status: 'error', error: 'Invalid URL format' });
+            }
+
+            const code = url.searchParams.get('code');
+            const state = url.searchParams.get('state');
+            const error = url.searchParams.get('error');
+
+            if (error) {
+                return res.status(400).json({ status: 'error', error: `OAuth error: ${error}` });
+            }
+
+            if (!code || !state) {
+                return res.status(400).json({ status: 'error', error: 'Missing code or state in URL' });
+            }
+
+            const storedState = pendingOAuthStates.get(state);
+            if (!storedState) {
+                return res.status(400).json({ status: 'error', error: 'Invalid or expired state. Please start OAuth flow again.' });
+            }
+
+            // Remove used state
+            pendingOAuthStates.delete(state);
+
+            // Complete OAuth flow
+            const accountData = await completeOAuthFlow(code, storedState.verifier, storedState.redirectUri);
+
+            // Add or update the account
+            accountManager.addAccount({
+                email: accountData.email,
+                refreshToken: accountData.refreshToken,
+                projectId: accountData.projectId,
+                source: 'oauth'
+            });
+
+            res.json({
+                status: 'ok',
+                email: accountData.email,
+                message: `Account ${accountData.email} added successfully`
+            });
+        } catch (error) {
+            logger.error('[WebUI] Error completing OAuth:', error);
             res.status(500).json({ status: 'error', error: error.message });
         }
     });
