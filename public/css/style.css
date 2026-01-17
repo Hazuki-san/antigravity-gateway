@@ -33,8 +33,15 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in {
@@ -80,8 +87,10 @@
 
 /* Tooltip Customization */
 .tooltip:before {
-    background-color: #171717 !important; /* space-800 */
-    border: 1px solid #27272a; /* space-border */
+    background-color: #171717 !important;
+    /* space-800 */
+    border: 1px solid #27272a;
+    /* space-border */
     color: #e5e7eb !important;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
@@ -89,4 +98,45 @@
 
 .tooltip-left:before {
     margin-right: 0.5rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+
+    /* Hide sidebar on mobile */
+    .w-64 {
+        display: none !important;
+    }
+
+    /* Make navbar simpler */
+    .h-14 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Full width content */
+    .flex-1 {
+        width: 100% !important;
+    }
+
+    /* Smaller padding */
+    .p-6 {
+        padding: 1rem !important;
+    }
+
+    /* Modal adjustments */
+    .modal-box {
+        width: 95vw;
+        max-width: 95vw;
+        margin: 0.5rem;
+    }
+
+    /* Table scroll on mobile */
+    .table {
+        font-size: 0.75rem;
+    }
+
+    .glass-panel {
+        overflow-x: auto;
+    }
 }
