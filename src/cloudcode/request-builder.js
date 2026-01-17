@@ -57,8 +57,9 @@ export function buildCloudCodeRequest(anthropicRequest, projectId) {
     const apiModel = mapToApiModelName(model);
     const googleRequest = convertAnthropicToGoogle(anthropicRequest);
 
-    // Use stable session ID derived from first user message for cache continuity
-    googleRequest.sessionId = deriveSessionId(anthropicRequest);
+    // Note: Antigravity-Manager does NOT add sessionId to the request body
+    // They only use it for signature injection into functionCall parts
+    // Removed: googleRequest.sessionId = deriveSessionId(anthropicRequest);
 
     const payload = {
         project: projectId,
