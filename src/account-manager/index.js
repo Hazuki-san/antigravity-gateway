@@ -302,6 +302,49 @@ export class AccountManager {
     getAllAccounts() {
         return this.#accounts;
     }
+
+    /**
+     * Add or update an account from OAuth flow
+     * @param {{email: string, refreshToken: string, projectId?: string, source?: string}} accountData
+     * @returns {void}
+     */
+    addAccount(accountData) {
+        const { email, refreshToken, projectId, source = 'oauth' } = accountData;
+
+        // Check if account already exists
+        const existingIndex = this.#accounts.findIndex(a => a.email === email);
+
+        if (existingIndex >= 0) {
+            // Update existing account
+            this.#accounts[existingIndex] = {
+                ...this.#accounts[existingIndex],
+                refreshToken,
+                projectId: projectId || this.#accounts[existingIndex].projectId,
+                source,
+                isInvalid: false, // Clear invalid flag on re-auth
+                invalidReason: null
+            };
+            logger.info(`[AccountManager] Updated account: ${email}`);
+        } else {
+            // Add new account
+            this.#accounts.push({
+                email,
+                refreshToken,
+                projectId,
+                source,
+                modelRateLimits: {},
+                isInvalid: false
+            });
+            logger.info(`[AccountManager] Added new account: ${email}`);
+        }
+
+        // Clear caches for this account
+        this.clearTokenCache(email);
+        this.clearProjectCache(email);
+
+        // Save to disk
+        this.saveToDisk();
+    }
 }
 
 export default AccountManager;
