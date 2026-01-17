@@ -58,6 +58,7 @@ export function convertAnthropicToGoogle(anthropicRequest) {
 
         if (systemParts.length > 0) {
             googleRequest.systemInstruction = {
+                role: 'user', // Required by Cloud Code API (like Antigravity-Manager)
                 parts: systemParts
             };
         }
