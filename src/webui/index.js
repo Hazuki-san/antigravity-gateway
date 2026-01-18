@@ -19,6 +19,7 @@ import { DEFAULT_PORT } from '../constants.js';
 import { readClaudeConfig, updateClaudeConfig, getClaudeConfigPath } from '../utils/claude-config.js';
 import { logger } from '../utils/logger.js';
 import { getAuthorizationUrl, completeOAuthFlow } from '../auth/oauth.js';
+import { getGatewayConfig, saveGatewayConfig } from '../gateway-config.js';
 
 // OAuth state storage (state -> { verifier, timestamp })
 const pendingOAuthStates = new Map();
@@ -152,6 +153,44 @@ export function mountWebUI(app, dirname, accountManager) {
                 message: 'Accounts reloaded from disk',
                 summary: status.summary
             });
+        } catch (error) {
+            res.status(500).json({ status: 'error', error: error.message });
+        }
+    });
+
+    // ==========================================
+    // Gateway Configuration API
+    // ==========================================
+
+    /**
+     * GET /api/gateway/config - Get gateway configuration including system instruction
+     */
+    app.get('/api/gateway/config', (req, res) => {
+        try {
+            const gatewayConfig = getGatewayConfig();
+            res.json(gatewayConfig);
+        } catch (error) {
+            res.status(500).json({ status: 'error', error: error.message });
+        }
+    });
+
+    /**
+     * POST /api/gateway/config - Save gateway configuration
+     */
+    app.post('/api/gateway/config', (req, res) => {
+        try {
+            const { systemInstruction } = req.body;
+
+            // Validate required string
+            if (!systemInstruction || !systemInstruction.includes('You are Antigravity')) {
+                return res.status(400).json({
+                    status: 'error',
+                    error: 'System instruction must contain "You are Antigravity"'
+                });
+            }
+
+            saveGatewayConfig({ systemInstruction });
+            res.json({ status: 'ok', message: 'Gateway configuration saved' });
         } catch (error) {
             res.status(500).json({ status: 'error', error: error.message });
         }

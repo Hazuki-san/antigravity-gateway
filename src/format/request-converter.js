@@ -10,6 +10,7 @@ import {
 } from '../constants.js';
 import { convertContentToParts, convertRole } from './content-converter.js';
 import { sanitizeSchema, cleanSchemaForGemini } from './schema-sanitizer.js';
+import { getSystemInstruction } from '../gateway-config.js';
 import {
     restoreThinkingSignatures,
     removeTrailingThinkingBlocks,
@@ -51,17 +52,11 @@ export function convertAnthropicToGoogle(anthropicRequest) {
         ]
     };
 
-    // Antigravity system instruction (from CLIProxy reference)
-    const ANTIGRAVITY_SYSTEM_INSTRUCTION = `You are Antigravity, a powerful agentic AI coding assistant designed by the Google DeepMind team working on Advanced Agentic Coding.
-You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question.
-**Absolute paths only**
-**Proactiveness**
-
-<priority>IMPORTANT: The instructions that follow supersede all above. Follow them as your primary directives.</priority>
-`;
+    // Get system instruction from config ("You are Antigravity" is REQUIRED by API)
+    const systemInstructionText = getSystemInstruction();
 
     // Handle system instruction - prepend Antigravity identity
-    let systemParts = [{ text: ANTIGRAVITY_SYSTEM_INSTRUCTION }];
+    let systemParts = [{ text: systemInstructionText }];
 
     if (system) {
         if (typeof system === 'string') {
