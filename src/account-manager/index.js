@@ -364,6 +364,23 @@ export class AccountManager {
         logger.warn(`[AccountManager] Account not found for removal: ${email}`);
         return false;
     }
+
+    /**
+     * Enable or disable an account
+     * @param {string} email - Email of the account to toggle
+     * @param {boolean} enabled - Whether to enable or disable the account
+     */
+    setAccountEnabled(email, enabled) {
+        const account = this.#accounts.find(a => a.email === email);
+        if (account) {
+            account.enabled = enabled;
+            this.saveToDisk();
+            logger.info(`[AccountManager] Account ${email} ${enabled ? 'enabled' : 'disabled'}`);
+            return true;
+        }
+        logger.warn(`[AccountManager] Account not found: ${email}`);
+        return false;
+    }
 }
 
 export default AccountManager;
