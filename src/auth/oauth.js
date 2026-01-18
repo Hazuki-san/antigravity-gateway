@@ -9,7 +9,7 @@
 import crypto from 'crypto';
 import http from 'http';
 import {
-    ANTIGRAVITY_ENDPOINT_FALLBACKS,
+    ANTIGRAVITY_LOAD_ENDPOINTS,
     ANTIGRAVITY_HEADERS,
     OAUTH_CONFIG,
     OAUTH_REDIRECT_URI
@@ -330,7 +330,8 @@ export async function getUserEmail(accessToken) {
  * @returns {Promise<string|null>} Project ID or null if not found
  */
 export async function discoverProjectId(accessToken) {
-    for (const endpoint of ANTIGRAVITY_ENDPOINT_FALLBACKS) {
+    // Use ANTIGRAVITY_LOAD_ENDPOINTS (prod first per reference)
+    for (const endpoint of ANTIGRAVITY_LOAD_ENDPOINTS) {
         try {
             const response = await fetch(`${endpoint}/v1internal:loadCodeAssist`, {
                 method: 'POST',

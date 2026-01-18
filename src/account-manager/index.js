@@ -345,6 +345,25 @@ export class AccountManager {
         // Save to disk
         this.saveToDisk();
     }
+
+    /**
+     * Remove an account by email
+     * @param {string} email - Email of the account to remove
+     * @returns {boolean} True if account was removed, false if not found
+     */
+    removeAccount(email) {
+        const index = this.#accounts.findIndex(a => a.email === email);
+        if (index >= 0) {
+            this.#accounts.splice(index, 1);
+            this.clearTokenCache(email);
+            this.clearProjectCache(email);
+            this.saveToDisk();
+            logger.info(`[AccountManager] Removed account: ${email}`);
+            return true;
+        }
+        logger.warn(`[AccountManager] Account not found for removal: ${email}`);
+        return false;
+    }
 }
 
 export default AccountManager;

@@ -28,29 +28,38 @@ function getAntigravityDbPath() {
 
 /**
  * Generate platform-specific User-Agent string.
+ * Must match Antigravity-Manager's exact User-Agent to avoid quota restrictions!
  * @returns {string} User-Agent in format "antigravity/version os/arch"
  */
 function getPlatformUserAgent() {
-    const os = platform();
-    const architecture = arch();
-    return `antigravity/1.11.5 ${os}/${architecture}`;
+    // Use EXACT same User-Agent as Antigravity reference
+    return 'antigravity/1.11.5 windows/amd64';
 }
 
 // Cloud Code API endpoints (in fallback order)
 const ANTIGRAVITY_ENDPOINT_DAILY = 'https://daily-cloudcode-pa.sandbox.googleapis.com';
+const ANTIGRAVITY_ENDPOINT_AUTOPUSH = 'https://autopush-cloudcode-pa.sandbox.googleapis.com';
 const ANTIGRAVITY_ENDPOINT_PROD = 'https://cloudcode-pa.googleapis.com';
 
-// Endpoint fallback order (prod → daily, matching Antigravity-Manager)
-// PROD is stable and has gemini-3 models; DAILY is for testing new features
+// Endpoint fallback order (daily → autopush → prod, matching CLIProxy reference)
 export const ANTIGRAVITY_ENDPOINT_FALLBACKS = [
-    ANTIGRAVITY_ENDPOINT_PROD,
-    ANTIGRAVITY_ENDPOINT_DAILY
+    ANTIGRAVITY_ENDPOINT_DAILY,
+    ANTIGRAVITY_ENDPOINT_AUTOPUSH,
+    ANTIGRAVITY_ENDPOINT_PROD
 ];
 
-// Required headers for Antigravity API requests
-// Note: Antigravity-Manager only sends Authorization, Content-Type, User-Agent
+// Endpoints for loadCodeAssist (prod first per reference)
+export const ANTIGRAVITY_LOAD_ENDPOINTS = [
+    ANTIGRAVITY_ENDPOINT_PROD,
+    ANTIGRAVITY_ENDPOINT_DAILY,
+    ANTIGRAVITY_ENDPOINT_AUTOPUSH
+];
+
+// Required headers for Antigravity API requests (from CLIProxy reference)
 export const ANTIGRAVITY_HEADERS = {
-    'User-Agent': getPlatformUserAgent()
+    'User-Agent': getPlatformUserAgent(),
+    'X-Goog-Api-Client': 'google-cloud-sdk vscode_cloudshelleditor/0.1',
+    'Client-Metadata': JSON.stringify({ ideType: 'IDE_UNSPECIFIED', platform: 'PLATFORM_UNSPECIFIED', pluginType: 'GEMINI' })
 };
 
 // Default project ID if none can be discovered
@@ -130,7 +139,7 @@ export const OAUTH_CONFIG = {
     clientSecret: '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',
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    userInfoUrl: 'https://www.googleapis.com/oauth2/v1/userinfo',
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
     callbackPort: 51121,
     scopes: [
         'https://www.googleapis.com/auth/cloud-platform',
