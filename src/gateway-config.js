@@ -6,7 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { homedir } from 'os';
-import { logger } from '../utils/logger.js';
+import { logger } from './utils/logger.js';
 
 // Config file path
 const CONFIG_DIR = path.join(homedir(), '.config/antigravity-gateway');
