@@ -66,7 +66,7 @@ export function buildCloudCodeRequest(anthropicRequest, projectId) {
         model: apiModel,
         request: googleRequest,
         userAgent: 'antigravity',
-        requestId: 'agent-' + crypto.randomUUID(),
+        requestId: 'openai-' + crypto.randomUUID(),
         requestType: getRequestType(model) // Required by Cloud Code API
     };
 
