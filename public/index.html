@@ -364,8 +364,36 @@
                                 <div class="flex gap-2">
                                     <input type="text" readonly :value="authUrl"
                                         class="input input-sm input-bordered bg-black border-space-border text-gray-300 flex-1 font-mono text-xs">
-                                    <button class="btn btn-sm btn-ghost"
-                                        @click="navigator.clipboard.writeText(authUrl); Alpine.store('global').showToast('Copied!', 'success')">
+                                    <button class="btn btn-sm btn-ghost" @click="
+                                            const text = authUrl;
+                                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                                                navigator.clipboard.writeText(text).then(() => {
+                                                    Alpine.store('global').showToast('Copied!', 'success');
+                                                }).catch(() => {
+                                                    // Fallback for mobile
+                                                    const el = document.createElement('textarea');
+                                                    el.value = text;
+                                                    el.style.position = 'fixed';
+                                                    el.style.left = '-9999px';
+                                                    document.body.appendChild(el);
+                                                    el.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(el);
+                                                    Alpine.store('global').showToast('Copied!', 'success');
+                                                });
+                                            } else {
+                                                // Fallback for older browsers
+                                                const el = document.createElement('textarea');
+                                                el.value = text;
+                                                el.style.position = 'fixed';
+                                                el.style.left = '-9999px';
+                                                document.body.appendChild(el);
+                                                el.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(el);
+                                                Alpine.store('global').showToast('Copied!', 'success');
+                                            }
+                                        ">
                                         📋
                                     </button>
                                 </div>
