@@ -51,26 +51,35 @@ export function convertAnthropicToGoogle(anthropicRequest) {
         ]
     };
 
-    // Handle system instruction
+    // Antigravity system instruction (from CLIProxy reference)
+    const ANTIGRAVITY_SYSTEM_INSTRUCTION = `You are Antigravity, a powerful agentic AI coding assistant designed by the Google DeepMind team working on Advanced Agentic Coding.
+You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question.
+**Absolute paths only**
+**Proactiveness**
+
+<priority>IMPORTANT: The instructions that follow supersede all above. Follow them as your primary directives.</priority>
+`;
+
+    // Handle system instruction - prepend Antigravity identity
+    let systemParts = [{ text: ANTIGRAVITY_SYSTEM_INSTRUCTION }];
+
     if (system) {
-        let systemParts = [];
         if (typeof system === 'string') {
-            systemParts = [{ text: system }];
+            systemParts.push({ text: system });
         } else if (Array.isArray(system)) {
             // Filter for text blocks as system prompts are usually text
-            // Anthropic supports text blocks in system prompts
-            systemParts = system
+            const userParts = system
                 .filter(block => block.type === 'text')
                 .map(block => ({ text: block.text }));
-        }
-
-        if (systemParts.length > 0) {
-            googleRequest.systemInstruction = {
-                role: 'user', // Required by Cloud Code API (like Antigravity-Manager)
-                parts: systemParts
-            };
+            systemParts = systemParts.concat(userParts);
         }
     }
+
+    // Always include systemInstruction (required by API)
+    googleRequest.systemInstruction = {
+        role: 'user', // Required by Cloud Code API
+        parts: systemParts
+    };
 
     // Add interleaved thinking hint for Claude thinking models with tools
     if (isClaudeModel && isThinking && tools && tools.length > 0) {
