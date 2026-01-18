@@ -341,9 +341,7 @@ export async function discoverProjectId(accessToken) {
                 },
                 body: JSON.stringify({
                     metadata: {
-                        ideType: 'IDE_UNSPECIFIED',
-                        platform: 'PLATFORM_UNSPECIFIED',
-                        pluginType: 'GEMINI'
+                        ideType: 'ANTIGRAVITY' // Must match Antigravity-Manager's format
                     }
                 })
             });
