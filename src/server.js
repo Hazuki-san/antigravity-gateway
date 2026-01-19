@@ -30,6 +30,7 @@ import {
     createResponsesStreamState,
     formatResponsesSSE
 } from './format/openai-responses.js';
+import { handleGeminiGenerate } from './handlers/gemini-handler.js';
 
 // Parse fallback flag directly from command line args to avoid circular dependency
 const args = process.argv.slice(2);
@@ -128,7 +129,7 @@ app.use((req, res, next) => {
     // Skip logging for event logging batch unless in debug mode
     if (req.path === '/api/event_logging/batch') {
         if (logger.isDebugEnabled) {
-             logger.debug(`[${req.method}] ${req.path}`);
+            logger.debug(`[${req.method}] ${req.path}`);
         }
     } else {
         logger.info(`[${req.method}] ${req.path}`);
@@ -144,11 +145,11 @@ app.get('/health', async (req, res) => {
     try {
         await ensureInitialized();
         const start = Date.now();
-        
+
         // Get high-level status first
         const status = accountManager.getStatus();
         const allAccounts = accountManager.getAllAccounts();
-        
+
         // Fetch quotas for each account in parallel to get detailed model info
         const accountDetails = await Promise.allSettled(
             allAccounts.map(async (account) => {
@@ -849,6 +850,27 @@ app.post('/v1/responses', async (req, res) => {
                 }
             });
         }
+    }
+});
+
+/**
+ * Google Generative AI (Gemini) API endpoints
+ * POST /v1beta/models/{model}:generateContent
+ * POST /v1beta/models/{model}:streamGenerateContent
+ */
+app.post('/v1beta/models/*', async (req, res) => {
+    try {
+        await ensureInitialized();
+        await handleGeminiGenerate(req, res, accountManager);
+    } catch (error) {
+        logger.error('[Gemini] Route error:', error);
+        res.status(500).json({
+            error: {
+                code: 500,
+                message: error.message,
+                status: 'INTERNAL'
+            }
+        });
     }
 });
 
