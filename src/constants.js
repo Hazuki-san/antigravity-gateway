@@ -48,11 +48,11 @@ export const ANTIGRAVITY_ENDPOINT_FALLBACKS = [
     ANTIGRAVITY_ENDPOINT_PROD
 ];
 
-// Endpoints for loadCodeAssist (prod first per reference)
+// Endpoints for v1internal API calls (prod first, then daily - matches Antigravity-Manager)
+// Note: AUTOPUSH removed - Antigravity-Manager only uses these 2 endpoints
 export const ANTIGRAVITY_LOAD_ENDPOINTS = [
     ANTIGRAVITY_ENDPOINT_PROD,
-    ANTIGRAVITY_ENDPOINT_DAILY,
-    ANTIGRAVITY_ENDPOINT_AUTOPUSH
+    ANTIGRAVITY_ENDPOINT_DAILY
 ];
 
 // Required headers for Antigravity API requests (from CLIProxy reference)

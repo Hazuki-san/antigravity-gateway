@@ -97,6 +97,9 @@ export async function sendMessage(anthropicRequest, accountManager, fallbackEnab
             const project = await accountManager.getProjectForAccount(account, token);
             const payload = buildCloudCodeRequest(anthropicRequest, project);
 
+            // DEBUG: Dump OpenAI path request for comparison with Gemini path
+            console.log('[OpenAI] FULL REQUEST:', JSON.stringify(payload, null, 2));
+
             logger.debug(`[CloudCode] Sending request for model: ${model}`);
 
             // Try each endpoint
