@@ -33,12 +33,12 @@ export async function listModels(token) {
     const modelList = Object.entries(data.models)
         .filter(([modelId]) => isSupportedModel(modelId))
         .map(([modelId, modelData]) => ({
-        id: modelId,
-        object: 'model',
-        created: Math.floor(Date.now() / 1000),
-        owned_by: 'anthropic',
-        description: modelData.displayName || modelId
-    }));
+            id: modelId,
+            object: 'model',
+            created: Math.floor(Date.now() / 1000),
+            owned_by: 'anthropic',
+            description: modelData.displayName || modelId
+        }));
 
     return {
         object: 'list',
@@ -51,14 +51,19 @@ export async function listModels(token) {
  * Returns model quotas including remaining fraction and reset time
  *
  * @param {string} token - OAuth access token
+ * @param {string} projectId - Project ID (required for accurate quota data)
  * @returns {Promise<Object>} Raw response from fetchAvailableModels API
  */
-export async function fetchAvailableModels(token) {
+export async function fetchAvailableModels(token, projectId) {
     const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
         ...ANTIGRAVITY_HEADERS
     };
+
+    // Project ID is required for accurate quota data
+    // Without it, API returns incorrect quotas (always 100%)
+    const body = projectId ? { project: projectId } : {};
 
     for (const endpoint of ANTIGRAVITY_ENDPOINT_FALLBACKS) {
         try {
@@ -66,7 +71,7 @@ export async function fetchAvailableModels(token) {
             const response = await fetch(url, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({})
+                body: JSON.stringify(body)
             });
 
             if (!response.ok) {
@@ -89,10 +94,11 @@ export async function fetchAvailableModels(token) {
  * Extracts quota info (remaining fraction and reset time) for each model
  *
  * @param {string} token - OAuth access token
+ * @param {string} projectId - Project ID (required for accurate quota data)
  * @returns {Promise<Object>} Map of modelId -> { remainingFraction, resetTime }
  */
-export async function getModelQuotas(token) {
-    const data = await fetchAvailableModels(token);
+export async function getModelQuotas(token, projectId) {
+    const data = await fetchAvailableModels(token, projectId);
     if (!data || !data.models) return {};
 
     const quotas = {};

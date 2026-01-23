@@ -180,7 +180,8 @@ app.get('/health', async (req, res) => {
 
                 try {
                     const token = await accountManager.getTokenForAccount(account);
-                    const quotas = await getModelQuotas(token);
+                    const projectId = await accountManager.getProjectForAccount(account, token);
+                    const quotas = await getModelQuotas(token, projectId);
 
                     // Format quotas for readability
                     const formattedQuotas = {};
@@ -273,7 +274,8 @@ app.get('/account-limits', async (req, res) => {
 
                 try {
                     const token = await accountManager.getTokenForAccount(account);
-                    const quotas = await getModelQuotas(token);
+                    const projectId = await accountManager.getProjectForAccount(account, token);
+                    const quotas = await getModelQuotas(token, projectId);
 
                     return {
                         email: account.email,
