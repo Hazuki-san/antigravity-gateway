@@ -207,7 +207,7 @@ export async function handleGeminiGenerate(req, res, accountManager) {
                 const headers = {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`,
-                    'User-Agent': 'antigravity/1.11.9 windows/amd64'
+                    'User-Agent': 'antigravity/1.15.8 windows/amd64'
                 };
 
                 try {
