@@ -33,7 +33,7 @@ function getAntigravityDbPath() {
  */
 function getPlatformUserAgent() {
     // Use EXACT same User-Agent as Antigravity reference
-    return 'antigravity/1.15.8 windows/amd64';
+    return 'antigravity/1.19.4 windows/amd64';
 }
 
 // Cloud Code API endpoints (in fallback order)
