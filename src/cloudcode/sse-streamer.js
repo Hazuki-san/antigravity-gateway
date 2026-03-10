@@ -122,8 +122,8 @@ export async function* streamSSEResponse(response, originalModel) {
                         };
 
                     } else if (part.text !== undefined) {
-                        // Skip empty text parts
-                        if (!part.text || part.text.trim().length === 0) {
+                        // Skip empty text parts but preserve whitespace (newlines, spaces)
+                        if (!part.text) {
                             continue;
                         }
 
